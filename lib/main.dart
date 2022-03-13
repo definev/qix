@@ -1,7 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'helpers/joypad.dart';
-import 'wix_game.dart';
+import 'qix_game.dart';
 
 void main() {
   final game = QixGame();

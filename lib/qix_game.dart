@@ -5,13 +5,18 @@ import 'components/boundary/boundary.dart';
 import 'components/player.dart';
 import 'helpers/direction.dart';
 
-class QixGame extends FlameGame
-    with HasKeyboardHandlerComponents, HasCollidables {
-  late Player player = Player()..position = Vector2(size.x / 2, size.y - 25);
+class QixGame extends FlameGame //
+    with
+        HasKeyboardHandlerComponents,
+        HasCollidables {
+  late Player player = Player()..position = initialPlayerPosition;
   var left = BoundaryLeft();
   var right = BoundaryRight();
   var top = BoundaryTop();
   var bottom = BoundaryBottom();
+
+  Vector2 get initialPlayerPosition => Vector2(size.x / 2, size.y - 25);
+  Vector2 get playboardSize => size - Vector2(50, 50);
 
   void onDirectionChange(Direction direction) {
     switch (player.onBoundary) {

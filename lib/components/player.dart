@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../helpers/direction.dart';
+import '../qix_game.dart';
 import 'boundary/boundary.dart';
 
 enum OnBoundary {
@@ -18,8 +19,8 @@ enum OnBoundary {
 
 class Player extends PositionComponent //
     with
+        HasGameRef<QixGame>,
         KeyboardHandler,
-        HasGameRef,
         HasHitboxes,
         Collidable {
   Player() : super(anchor: Anchor.center, size: Vector2(20, 20), priority: 0);
@@ -31,7 +32,8 @@ class Player extends PositionComponent //
     ..color = const Color(0xFFFFFFFF)
     ..style = PaintingStyle.stroke;
 
-  final double _speed = 1;
+  // Percent of the screen that the player can move
+  final double _speed = 0.005;
 
   var direction = Direction.none;
   var lastDirection = Direction.none;
@@ -89,6 +91,31 @@ class Player extends PositionComponent //
   }
 
   @override
+  void onGameResize(Vector2 gameSize) {
+    super.onGameResize(gameSize);
+    Vector2 resizePosition = gameRef.initialPlayerPosition;
+    for (final path in _directionPath) {
+      switch (path.first) {
+        case Direction.down:
+          resizePosition += Vector2(0, gameRef.playboardSize.y * path.second);
+          break;
+        case Direction.left:
+          resizePosition -= Vector2(gameRef.playboardSize.x * path.second, 0);
+          break;
+        case Direction.right:
+          resizePosition += Vector2(gameRef.playboardSize.x * path.second, 0);
+          break;
+        case Direction.up:
+          resizePosition -= Vector2(0, gameRef.playboardSize.y * path.second);
+          break;
+        default:
+      }
+    }
+
+    position = resizePosition;
+  }
+
+  @override
   void update(double dt) {
     if (lastDirection != direction && direction != Direction.none) {
       _directionPath.add(Tuple2(direction, 0));
@@ -104,16 +131,16 @@ class Player extends PositionComponent //
     }
     switch (direction) {
       case Direction.up:
-        position += Vector2(0, -_speed);
+        position += Vector2(0, -_speed * gameRef.playboardSize.y);
         break;
       case Direction.down:
-        position += Vector2(0, _speed);
+        position += Vector2(0, _speed * gameRef.playboardSize.y);
         break;
       case Direction.left:
-        position += Vector2(-_speed, 0);
+        position += Vector2(-_speed * gameRef.playboardSize.x, 0);
         break;
       case Direction.right:
-        position += Vector2(_speed, 0);
+        position += Vector2(_speed * gameRef.playboardSize.x, 0);
         break;
       default:
         break;
@@ -127,16 +154,20 @@ class Player extends PositionComponent //
     for (final direction in _directionPath.reversed) {
       switch (direction.first) {
         case Direction.down:
-          renderDirectionPath.relativeLineTo(0, -direction.second);
+          renderDirectionPath.relativeLineTo(
+              0, -direction.second * gameRef.playboardSize.y);
           break;
         case Direction.up:
-          renderDirectionPath.relativeLineTo(0, direction.second);
+          renderDirectionPath.relativeLineTo(
+              0, direction.second * gameRef.playboardSize.y);
           break;
         case Direction.left:
-          renderDirectionPath.relativeLineTo(direction.second, 0);
+          renderDirectionPath.relativeLineTo(
+              direction.second * gameRef.playboardSize.x, 0);
           break;
         case Direction.right:
-          renderDirectionPath.relativeLineTo(-direction.second, 0);
+          renderDirectionPath.relativeLineTo(
+              -direction.second * gameRef.playboardSize.x, 0);
           break;
         default:
       }
