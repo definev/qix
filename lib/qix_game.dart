@@ -14,6 +14,35 @@ class QixGame extends FlameGame
   var bottom = BoundaryBottom();
 
   void onDirectionChange(Direction direction) {
+    switch (player.onBoundary) {
+      case OnBoundary.left:
+        if (direction == Direction.left) {
+          player.onBoundary = OnBoundary.none;
+          return;
+        }
+        break;
+      case OnBoundary.right:
+        if (direction == Direction.right) {
+          player.onBoundary = OnBoundary.none;
+          return;
+        }
+        break;
+      case OnBoundary.top:
+        if (direction == Direction.up) {
+          player.onBoundary = OnBoundary.none;
+          return;
+        }
+        break;
+      case OnBoundary.bottom:
+        if (direction == Direction.down) {
+          player.onBoundary = OnBoundary.none;
+          return;
+        }
+        break;
+      case OnBoundary.none:
+        break;
+    }
+
     if (player.lastDirection == direction.opposite) {
       player.direction = Direction.none;
       return;
