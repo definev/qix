@@ -15,8 +15,8 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more informations: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
-class _$OnBoundaryTearOff {
-  const _$OnBoundaryTearOff();
+class _$BoundaryTearOff {
+  const _$BoundaryTearOff();
 
   _Left left() {
     return const _Left();
@@ -40,10 +40,10 @@ class _$OnBoundaryTearOff {
 }
 
 /// @nodoc
-const $OnBoundary = _$OnBoundaryTearOff();
+const $Boundary = _$BoundaryTearOff();
 
 /// @nodoc
-mixin _$OnBoundary {
+mixin _$Boundary {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function() left,
@@ -103,19 +103,18 @@ mixin _$OnBoundary {
 }
 
 /// @nodoc
-abstract class $OnBoundaryCopyWith<$Res> {
-  factory $OnBoundaryCopyWith(
-          OnBoundary value, $Res Function(OnBoundary) then) =
-      _$OnBoundaryCopyWithImpl<$Res>;
+abstract class $BoundaryCopyWith<$Res> {
+  factory $BoundaryCopyWith(Boundary value, $Res Function(Boundary) then) =
+      _$BoundaryCopyWithImpl<$Res>;
 }
 
 /// @nodoc
-class _$OnBoundaryCopyWithImpl<$Res> implements $OnBoundaryCopyWith<$Res> {
-  _$OnBoundaryCopyWithImpl(this._value, this._then);
+class _$BoundaryCopyWithImpl<$Res> implements $BoundaryCopyWith<$Res> {
+  _$BoundaryCopyWithImpl(this._value, this._then);
 
-  final OnBoundary _value;
+  final Boundary _value;
   // ignore: unused_field
-  final $Res Function(OnBoundary) _then;
+  final $Res Function(Boundary) _then;
 }
 
 /// @nodoc
@@ -125,7 +124,7 @@ abstract class _$LeftCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$LeftCopyWithImpl<$Res> extends _$OnBoundaryCopyWithImpl<$Res>
+class __$LeftCopyWithImpl<$Res> extends _$BoundaryCopyWithImpl<$Res>
     implements _$LeftCopyWith<$Res> {
   __$LeftCopyWithImpl(_Left _value, $Res Function(_Left) _then)
       : super(_value, (v) => _then(v as _Left));
@@ -141,7 +140,7 @@ class _$_Left implements _Left {
 
   @override
   String toString() {
-    return 'OnBoundary.left()';
+    return 'Boundary.left()';
   }
 
   @override
@@ -234,7 +233,7 @@ class _$_Left implements _Left {
   }
 }
 
-abstract class _Left implements OnBoundary {
+abstract class _Left implements Boundary {
   const factory _Left() = _$_Left;
 }
 
@@ -245,7 +244,7 @@ abstract class _$RightCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$RightCopyWithImpl<$Res> extends _$OnBoundaryCopyWithImpl<$Res>
+class __$RightCopyWithImpl<$Res> extends _$BoundaryCopyWithImpl<$Res>
     implements _$RightCopyWith<$Res> {
   __$RightCopyWithImpl(_Right _value, $Res Function(_Right) _then)
       : super(_value, (v) => _then(v as _Right));
@@ -261,7 +260,7 @@ class _$_Right implements _Right {
 
   @override
   String toString() {
-    return 'OnBoundary.right()';
+    return 'Boundary.right()';
   }
 
   @override
@@ -354,7 +353,7 @@ class _$_Right implements _Right {
   }
 }
 
-abstract class _Right implements OnBoundary {
+abstract class _Right implements Boundary {
   const factory _Right() = _$_Right;
 }
 
@@ -365,7 +364,7 @@ abstract class _$TopCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$TopCopyWithImpl<$Res> extends _$OnBoundaryCopyWithImpl<$Res>
+class __$TopCopyWithImpl<$Res> extends _$BoundaryCopyWithImpl<$Res>
     implements _$TopCopyWith<$Res> {
   __$TopCopyWithImpl(_Top _value, $Res Function(_Top) _then)
       : super(_value, (v) => _then(v as _Top));
@@ -381,7 +380,7 @@ class _$_Top implements _Top {
 
   @override
   String toString() {
-    return 'OnBoundary.top()';
+    return 'Boundary.top()';
   }
 
   @override
@@ -474,7 +473,7 @@ class _$_Top implements _Top {
   }
 }
 
-abstract class _Top implements OnBoundary {
+abstract class _Top implements Boundary {
   const factory _Top() = _$_Top;
 }
 
@@ -485,7 +484,7 @@ abstract class _$BottomCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$BottomCopyWithImpl<$Res> extends _$OnBoundaryCopyWithImpl<$Res>
+class __$BottomCopyWithImpl<$Res> extends _$BoundaryCopyWithImpl<$Res>
     implements _$BottomCopyWith<$Res> {
   __$BottomCopyWithImpl(_Bottom _value, $Res Function(_Bottom) _then)
       : super(_value, (v) => _then(v as _Bottom));
@@ -501,7 +500,7 @@ class _$_Bottom implements _Bottom {
 
   @override
   String toString() {
-    return 'OnBoundary.bottom()';
+    return 'Boundary.bottom()';
   }
 
   @override
@@ -594,7 +593,7 @@ class _$_Bottom implements _Bottom {
   }
 }
 
-abstract class _Bottom implements OnBoundary {
+abstract class _Bottom implements Boundary {
   const factory _Bottom() = _$_Bottom;
 }
 
@@ -605,7 +604,7 @@ abstract class _$NoneCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$NoneCopyWithImpl<$Res> extends _$OnBoundaryCopyWithImpl<$Res>
+class __$NoneCopyWithImpl<$Res> extends _$BoundaryCopyWithImpl<$Res>
     implements _$NoneCopyWith<$Res> {
   __$NoneCopyWithImpl(_None _value, $Res Function(_None) _then)
       : super(_value, (v) => _then(v as _None));
@@ -621,7 +620,7 @@ class _$_None implements _None {
 
   @override
   String toString() {
-    return 'OnBoundary.none()';
+    return 'Boundary.none()';
   }
 
   @override
@@ -714,6 +713,6 @@ class _$_None implements _None {
   }
 }
 
-abstract class _None implements OnBoundary {
+abstract class _None implements Boundary {
   const factory _None() = _$_None;
 }

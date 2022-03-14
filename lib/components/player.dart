@@ -30,7 +30,7 @@ class Player extends PositionComponent //
 
   var direction = const Direction.none();
   var lastDirection = const Direction.none();
-  var onBoundary = const OnBoundary.bottom();
+  var onBoundarySet = <Boundary>{const Boundary.bottom()};
 
   final List<Tuple2<Direction, double>> _directionPath = [];
 
@@ -130,33 +130,33 @@ class Player extends PositionComponent //
   void onCollision(Set<Vector2> intersectionPoints, Collidable other) {
     bodyPaint.color = const Color(0xFFD60A0A);
     if (other is BoundaryLeft) {
-      onBoundary = const OnBoundary.left();
+      onBoundarySet.add(const Boundary.left());
     }
     if (other is BoundaryRight) {
-      onBoundary = const OnBoundary.right();
+      onBoundarySet.add(const Boundary.right());
     }
     if (other is BoundaryTop) {
-      onBoundary = const OnBoundary.top();
+      onBoundarySet.add(const Boundary.top());
     }
     if (other is BoundaryBottom) {
-      onBoundary = const OnBoundary.bottom();
+      onBoundarySet.add(const Boundary.bottom());
     }
   }
 
   @override
   void onCollisionEnd(Collidable other) {
-    onBoundary = const OnBoundary.none();
+    bodyPaint.color = const Color(0xFFFFB20D);
     if (other is BoundaryLeft) {
-      bodyPaint.color = const Color(0xFFFFB20D);
+      onBoundarySet.remove(const Boundary.left());
     }
     if (other is BoundaryRight) {
-      bodyPaint.color = const Color(0xFFFFB20D);
+      onBoundarySet.remove(const Boundary.right());
     }
     if (other is BoundaryTop) {
-      bodyPaint.color = const Color(0xFFFFB20D);
+      onBoundarySet.remove(const Boundary.top());
     }
     if (other is BoundaryBottom) {
-      bodyPaint.color = const Color(0xFFFFB20D);
+      onBoundarySet.remove(const Boundary.bottom());
     }
   }
 
@@ -175,21 +175,21 @@ class Player extends PositionComponent //
     if (event is RawKeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         if (lastDirection.opposite == const Direction.up() ||
-            onBoundary == const OnBoundary.top()) {
+            onBoundarySet.contains(const Boundary.top())) {
           direction = const Direction.none();
           return true;
         }
         direction = const Direction.up();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
         if (lastDirection.opposite == const Direction.down() ||
-            onBoundary == const OnBoundary.bottom()) {
+            onBoundarySet.contains(const Boundary.bottom())) {
           direction = const Direction.none();
           return true;
         }
         direction = const Direction.down();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
         if (lastDirection.opposite == const Direction.left() ||
-            onBoundary == const OnBoundary.left()) {
+            onBoundarySet.contains(const Boundary.left())) {
           direction = const Direction.none();
           return true;
         }
@@ -197,7 +197,7 @@ class Player extends PositionComponent //
         direction = const Direction.left();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
         if (lastDirection.opposite == const Direction.right() ||
-            onBoundary == const OnBoundary.right()) {
+            onBoundarySet.contains(const Boundary.right())) {
           direction = const Direction.none();
           return true;
         }

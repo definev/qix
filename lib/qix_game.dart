@@ -19,30 +19,44 @@ class QixGame extends FlameGame //
   Vector2 get initialPlayerPosition => Vector2(size.x / 2, size.y - 25);
   Vector2 get playboardSize => size - Vector2(50, 50);
 
+  bool _isOutOfBound(Direction direction, Boundary boundary) {
+    return boundary.map(
+      left: (_) {
+        if (direction == const Direction.left()) {
+          return true;
+        }
+        return false;
+      },
+      right: (_) {
+        if (direction == const Direction.right()) {
+          return true;
+        }
+        return false;
+      },
+      top: (_) {
+        if (direction == const Direction.up()) {
+          return true;
+        }
+        return false;
+      },
+      bottom: (_) {
+        if (direction == const Direction.down()) {
+          return true;
+        }
+        return false;
+      },
+      none: (dir) {
+        return false;
+      },
+    );
+  }
+
   bool isOutOfBounds(Direction direction) {
-    return player.onBoundary.map(left: (_) {
-      if (direction == const Direction.left()) {
-        return true;
-      }
-      return false;
-    }, right: (_) {
-      if (direction == const Direction.right()) {
-        return true;
-      }
-      return false;
-    }, top: (_) {
-      if (direction == const Direction.up()) {
-        return true;
-      }
-      return false;
-    }, bottom: (_) {
-      if (direction == const Direction.down()) {
-        return true;
-      }
-      return false;
-    }, none: (dir) {
-      return false;
-    });
+    for (final boundary in player.onBoundarySet) {
+      bool isOut = _isOutOfBound(direction, boundary);
+      if (isOut) return true;
+    }
+    return false;
   }
 
   bool isOppositeDirection(Direction direction) {
@@ -50,10 +64,7 @@ class QixGame extends FlameGame //
   }
 
   void onDirectionChange(Direction direction) {
-    if (isOutOfBounds(direction)) {
-      player.onBoundary = const OnBoundary.none();
-      return;
-    }
+    if (isOutOfBounds(direction)) return;
     if (isOppositeDirection(direction)) {
       player.direction = const Direction.none();
       return;
