@@ -30,8 +30,8 @@ class BoundaryLeft extends PositionComponent //
   ) {
     if (other is Player) {
       paint.color = const Color(0xF021FD3F);
-      if (other.direction == Direction.left) {
-        other.direction = Direction.none;
+      if (other.direction == const Direction.left()) {
+        other.direction = const Direction.none();
       }
     }
   }
@@ -40,13 +40,10 @@ class BoundaryLeft extends PositionComponent //
   void onCollisionEnd(Collidable other) {
     if (other is Player) {
       paint.color = const Color(0xFFFFFFFF);
-      switch (other.lastDirection) {
-        case Direction.up:
-        case Direction.down:
-          other.direction = Direction.right;
-          break;
-        default:
-      }
+      other.lastDirection.mapOrNull(
+        up: (_) => other.direction = const Direction.right(),
+        down: (_) => other.direction = const Direction.right(),
+      );
     }
   }
 

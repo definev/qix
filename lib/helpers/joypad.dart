@@ -14,7 +14,7 @@ class Joypad extends StatefulWidget {
 }
 
 class JoypadState extends State<Joypad> {
-  Direction direction = Direction.none;
+  Direction direction = const Direction.none();
   Offset delta = Offset.zero;
 
   @override
@@ -71,15 +71,15 @@ class JoypadState extends State<Joypad> {
 
   Direction getDirectionFromOffset(Offset offset) {
     if (offset.dx > 20) {
-      return Direction.right;
+      return const Direction.right();
     } else if (offset.dx < -20) {
-      return Direction.left;
+      return const Direction.left();
     } else if (offset.dy > 20) {
-      return Direction.down;
+      return const Direction.down();
     } else if (offset.dy < -20) {
-      return Direction.up;
+      return const Direction.up();
     }
-    return Direction.none;
+    return const Direction.none();
   }
 
   void onDragDown(DragDownDetails d) {

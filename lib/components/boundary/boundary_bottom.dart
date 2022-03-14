@@ -30,8 +30,8 @@ class BoundaryBottom extends PositionComponent //
   ) {
     if (other is Player) {
       paint.color = const Color(0xF021FD3F);
-      if (other.direction == Direction.down) {
-        other.direction = Direction.none;
+      if (other.direction == const Direction.down()) {
+        other.direction = const Direction.none();
       }
     }
   }
@@ -40,13 +40,10 @@ class BoundaryBottom extends PositionComponent //
   void onCollisionEnd(Collidable other) {
     if (other is Player) {
       paint.color = const Color(0xFFFFFFFF);
-      switch (other.lastDirection) {
-        case Direction.left:
-        case Direction.right:
-          other.direction = Direction.up;
-          break;
-        default:
-      }
+      other.lastDirection.mapOrNull(
+        left: (_) => other.direction = const Direction.up(),
+        right: (_) => other.direction = const Direction.up(),
+      );
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 
 import 'components/boundary/boundary.dart';
+import 'components/boundary/on_boundary.dart';
 import 'components/player.dart';
 import 'helpers/direction.dart';
 
@@ -18,38 +19,43 @@ class QixGame extends FlameGame //
   Vector2 get initialPlayerPosition => Vector2(size.x / 2, size.y - 25);
   Vector2 get playboardSize => size - Vector2(50, 50);
 
-  void onDirectionChange(Direction direction) {
-    switch (player.onBoundary) {
-      case OnBoundary.left:
-        if (direction == Direction.left) {
-          player.onBoundary = OnBoundary.none;
-          return;
-        }
-        break;
-      case OnBoundary.right:
-        if (direction == Direction.right) {
-          player.onBoundary = OnBoundary.none;
-          return;
-        }
-        break;
-      case OnBoundary.top:
-        if (direction == Direction.up) {
-          player.onBoundary = OnBoundary.none;
-          return;
-        }
-        break;
-      case OnBoundary.bottom:
-        if (direction == Direction.down) {
-          player.onBoundary = OnBoundary.none;
-          return;
-        }
-        break;
-      case OnBoundary.none:
-        break;
-    }
+  bool isOutOfBounds(Direction direction) {
+    return player.onBoundary.map(left: (_) {
+      if (direction == const Direction.left()) {
+        return true;
+      }
+      return false;
+    }, right: (_) {
+      if (direction == const Direction.right()) {
+        return true;
+      }
+      return false;
+    }, top: (_) {
+      if (direction == const Direction.up()) {
+        return true;
+      }
+      return false;
+    }, bottom: (_) {
+      if (direction == const Direction.down()) {
+        return true;
+      }
+      return false;
+    }, none: (dir) {
+      return false;
+    });
+  }
 
-    if (player.lastDirection == direction.opposite) {
-      player.direction = Direction.none;
+  bool isOppositeDirection(Direction direction) {
+    return player.lastDirection == direction.opposite;
+  }
+
+  void onDirectionChange(Direction direction) {
+    if (isOutOfBounds(direction)) {
+      player.onBoundary = const OnBoundary.none();
+      return;
+    }
+    if (isOppositeDirection(direction)) {
+      player.direction = const Direction.none();
       return;
     }
     player.direction = direction;

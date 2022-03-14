@@ -8,14 +8,7 @@ import 'package:fpdart/fpdart.dart';
 import '../helpers/direction.dart';
 import '../qix_game.dart';
 import 'boundary/boundary.dart';
-
-enum OnBoundary {
-  none,
-  left,
-  right,
-  top,
-  bottom,
-}
+import 'boundary/on_boundary.dart';
 
 class Player extends PositionComponent //
     with
@@ -35,11 +28,55 @@ class Player extends PositionComponent //
   // Percent of the screen that the player can move
   final double _speed = 0.005;
 
-  var direction = Direction.none;
-  var lastDirection = Direction.none;
-  var onBoundary = OnBoundary.bottom;
+  var direction = const Direction.none();
+  var lastDirection = const Direction.none();
+  var onBoundary = const OnBoundary.bottom();
 
   final List<Tuple2<Direction, double>> _directionPath = [];
+
+  Vector2 _rePositioningPlayer(Vector2 size) {
+    Vector2 resizePosition = gameRef.initialPlayerPosition;
+    for (final path in _directionPath) {
+      path.first.mapOrNull(
+        down: (_) => resizePosition += Vector2(0, size.y * path.second),
+        left: (_) => resizePosition += Vector2(-size.x * path.second, 0),
+        right: (_) => resizePosition += Vector2(size.x * path.second, 0),
+        up: (_) => resizePosition += Vector2(0, -size.y * path.second),
+      );
+    }
+
+    return resizePosition;
+  }
+
+  Path _drawDirectionPath() {
+    final renderDirectionPath = Path()..moveTo(10, 10);
+    for (final direction in _directionPath.reversed) {
+      direction.first.mapOrNull(
+          down: (_) => renderDirectionPath.relativeLineTo(
+              0, -direction.second * gameRef.playboardSize.y),
+          left: (_) => renderDirectionPath.relativeLineTo(
+              direction.second * gameRef.playboardSize.x, 0),
+          right: (_) => renderDirectionPath.relativeLineTo(
+              -direction.second * gameRef.playboardSize.x, 0),
+          up: (_) => renderDirectionPath.relativeLineTo(
+              0, direction.second * gameRef.playboardSize.y),
+          none: (dir) {
+            if (dir.boundaryDirection != null) {
+              dir.boundaryDirection!.mapOrNull(
+                down: (_) => renderDirectionPath.relativeMoveTo(
+                    0, -direction.second * gameRef.playboardSize.y),
+                left: (_) => renderDirectionPath.relativeMoveTo(
+                    direction.second * gameRef.playboardSize.x, 0),
+                right: (_) => renderDirectionPath.relativeMoveTo(
+                    -direction.second * gameRef.playboardSize.x, 0),
+                up: (_) => renderDirectionPath.relativeMoveTo(
+                    0, direction.second * gameRef.playboardSize.y),
+              );
+            }
+          });
+    }
+    return renderDirectionPath;
+  }
 
   @override
   Future<void>? onLoad() async {
@@ -57,25 +94,58 @@ class Player extends PositionComponent //
   }
 
   @override
+  void update(double dt) {
+    if (lastDirection != direction && direction != const Direction.none()) {
+      _directionPath.add(Tuple2(direction, 0));
+    }
+
+    direction.maybeMap(
+      orElse: () {
+        lastDirection = direction;
+        _directionPath.last = _directionPath.last.copyWith(
+          value2: _directionPath.last.second + _speed,
+        );
+      },
+      none: (_) {},
+    );
+
+    direction.mapOrNull(
+      down: (_) => position += Vector2(0, gameRef.playboardSize.y * _speed),
+      left: (_) => position += Vector2(-gameRef.playboardSize.x * _speed, 0),
+      right: (_) => position += Vector2(gameRef.playboardSize.x * _speed, 0),
+      up: (_) => position += Vector2(0, -gameRef.playboardSize.y * _speed),
+    );
+
+    super.update(dt);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final renderDirectionPath = _drawDirectionPath();
+    canvas.drawPath(renderDirectionPath, _directionPaint);
+    canvas.drawPath(path, bodyPaint);
+  }
+
+  @override
   void onCollision(Set<Vector2> intersectionPoints, Collidable other) {
     bodyPaint.color = const Color(0xFFD60A0A);
     if (other is BoundaryLeft) {
-      onBoundary = OnBoundary.left;
+      onBoundary = const OnBoundary.left();
     }
     if (other is BoundaryRight) {
-      onBoundary = OnBoundary.right;
+      onBoundary = const OnBoundary.right();
     }
     if (other is BoundaryTop) {
-      onBoundary = OnBoundary.top;
+      onBoundary = const OnBoundary.top();
     }
     if (other is BoundaryBottom) {
-      onBoundary = OnBoundary.bottom;
+      onBoundary = const OnBoundary.bottom();
     }
   }
 
   @override
   void onCollisionEnd(Collidable other) {
-    onBoundary = OnBoundary.none;
+    onBoundary = const OnBoundary.none();
     if (other is BoundaryLeft) {
       bodyPaint.color = const Color(0xFFFFB20D);
     }
@@ -93,90 +163,8 @@ class Player extends PositionComponent //
   @override
   void onGameResize(Vector2 gameSize) {
     super.onGameResize(gameSize);
-    Vector2 resizePosition = gameRef.initialPlayerPosition;
-    for (final path in _directionPath) {
-      switch (path.first) {
-        case Direction.down:
-          resizePosition += Vector2(0, gameRef.playboardSize.y * path.second);
-          break;
-        case Direction.left:
-          resizePosition -= Vector2(gameRef.playboardSize.x * path.second, 0);
-          break;
-        case Direction.right:
-          resizePosition += Vector2(gameRef.playboardSize.x * path.second, 0);
-          break;
-        case Direction.up:
-          resizePosition -= Vector2(0, gameRef.playboardSize.y * path.second);
-          break;
-        default:
-      }
-    }
-
+    Vector2 resizePosition = _rePositioningPlayer(gameRef.playboardSize);
     position = resizePosition;
-  }
-
-  @override
-  void update(double dt) {
-    if (lastDirection != direction && direction != Direction.none) {
-      _directionPath.add(Tuple2(direction, 0));
-    }
-    switch (direction) {
-      case Direction.none:
-        break;
-      default:
-        lastDirection = direction;
-        _directionPath.last = _directionPath.last.copyWith(
-          value2: _directionPath.last.second + _speed,
-        );
-    }
-    switch (direction) {
-      case Direction.up:
-        position += Vector2(0, -_speed * gameRef.playboardSize.y);
-        break;
-      case Direction.down:
-        position += Vector2(0, _speed * gameRef.playboardSize.y);
-        break;
-      case Direction.left:
-        position += Vector2(-_speed * gameRef.playboardSize.x, 0);
-        break;
-      case Direction.right:
-        position += Vector2(_speed * gameRef.playboardSize.x, 0);
-        break;
-      default:
-        break;
-    }
-    super.update(dt);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    final renderDirectionPath = Path()..moveTo(10, 10);
-    for (final direction in _directionPath.reversed) {
-      switch (direction.first) {
-        case Direction.down:
-          renderDirectionPath.relativeLineTo(
-              0, -direction.second * gameRef.playboardSize.y);
-          break;
-        case Direction.up:
-          renderDirectionPath.relativeLineTo(
-              0, direction.second * gameRef.playboardSize.y);
-          break;
-        case Direction.left:
-          renderDirectionPath.relativeLineTo(
-              direction.second * gameRef.playboardSize.x, 0);
-          break;
-        case Direction.right:
-          renderDirectionPath.relativeLineTo(
-              -direction.second * gameRef.playboardSize.x, 0);
-          break;
-        default:
-      }
-    }
-    canvas.drawPath(
-      renderDirectionPath,
-      _directionPaint,
-    );
-    canvas.drawPath(path, bodyPaint);
   }
 
   @override
@@ -186,36 +174,36 @@ class Player extends PositionComponent //
   ) {
     if (event is RawKeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-        if (Direction.up == lastDirection.opposite ||
-            onBoundary == OnBoundary.top) {
-          direction = Direction.none;
+        if (lastDirection.opposite == const Direction.up() ||
+            onBoundary == const OnBoundary.top()) {
+          direction = const Direction.none();
           return true;
         }
-        direction = Direction.up;
+        direction = const Direction.up();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        if (Direction.down == lastDirection.opposite ||
-            onBoundary == OnBoundary.bottom) {
-          direction = Direction.none;
+        if (lastDirection.opposite == const Direction.down() ||
+            onBoundary == const OnBoundary.bottom()) {
+          direction = const Direction.none();
           return true;
         }
-        direction = Direction.down;
+        direction = const Direction.down();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        if (Direction.left == lastDirection.opposite ||
-            onBoundary == OnBoundary.left) {
-          direction = Direction.none;
+        if (lastDirection.opposite == const Direction.left() ||
+            onBoundary == const OnBoundary.left()) {
+          direction = const Direction.none();
           return true;
         }
 
-        direction = Direction.left;
+        direction = const Direction.left();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        if (Direction.right == lastDirection.opposite ||
-            onBoundary == OnBoundary.right) {
-          direction = Direction.none;
+        if (lastDirection.opposite == const Direction.right() ||
+            onBoundary == const OnBoundary.right()) {
+          direction = const Direction.none();
           return true;
         }
-        direction = Direction.right;
+        direction = const Direction.right();
       } else {
-        direction = Direction.none;
+        direction = const Direction.none();
       }
     }
 
