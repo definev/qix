@@ -52,7 +52,7 @@ class QixGame extends FlameGame //
   }
 
   bool isOutOfBounds(Direction direction) {
-    for (final boundary in player.onBoundarySet) {
+    for (final boundary in player.collidedBoundarySet) {
       bool isOut = _isOutOfBound(direction, boundary);
       if (isOut) return true;
     }

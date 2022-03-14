@@ -5,6 +5,7 @@ import 'package:flutter/painting.dart';
 
 import '../../helpers/direction.dart';
 import '../player.dart';
+import 'common.dart';
 
 class BoundaryRight extends PositionComponent //
     with
@@ -12,7 +13,7 @@ class BoundaryRight extends PositionComponent //
         HasHitboxes,
         Collidable {
   Paint paint = Paint()
-    ..color = const Color(0xFFFFFFFF)
+    ..color = noCollideColor
     ..strokeWidth = 3
     ..strokeJoin = StrokeJoin.bevel
     ..style = PaintingStyle.stroke;
@@ -29,7 +30,7 @@ class BoundaryRight extends PositionComponent //
     Collidable other,
   ) {
     if (other is Player) {
-      paint.color = const Color(0xF021FD3F);
+      paint.color = collideColor;
       if (other.direction == const Direction.right()) {
         other.direction = const Direction.none();
       }
@@ -39,7 +40,7 @@ class BoundaryRight extends PositionComponent //
   @override
   void onCollisionEnd(Collidable other) {
     if (other is Player) {
-      paint.color = const Color(0xFFFFFFFF);
+      paint.color = noCollideColor;
       other.lastDirection.mapOrNull(
         up: (_) => other.direction = const Direction.left(),
         down: (_) => other.direction = const Direction.left(),

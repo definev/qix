@@ -1,7 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/geometry.dart';
 import 'package:flame/input.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -30,7 +30,7 @@ class Player extends PositionComponent //
 
   var direction = const Direction.none();
   var lastDirection = const Direction.none();
-  var onBoundarySet = <Boundary>{const Boundary.bottom()};
+  var collidedBoundarySet = <Boundary>{const Boundary.bottom()};
 
   final List<Tuple2<Direction, double>> _directionPath = [];
 
@@ -95,28 +95,57 @@ class Player extends PositionComponent //
 
   @override
   void update(double dt) {
+    super.update(dt);
     if (lastDirection != direction && direction != const Direction.none()) {
-      _directionPath.add(Tuple2(direction, 0));
+      bool canAddPath = direction.maybeMap(
+        orElse: () => true,
+        none: (dir) {
+          if (dir.boundaryDirection != null &&
+              lastDirection != dir.boundaryDirection) {
+            return true;
+          }
+          return false;
+        },
+      );
+      if (canAddPath) _directionPath.add(Tuple2(direction, 0));
     }
 
     direction.maybeMap(
       orElse: () {
         lastDirection = direction;
-        _directionPath.last = _directionPath.last.copyWith(
-          value2: _directionPath.last.second + _speed,
-        );
+        _directionPath.last = _directionPath //
+            .last
+            .copyWith(value2: _directionPath.last.second + _speed);
       },
-      none: (_) {},
+      none: (dir) {
+        if (dir.boundaryDirection != null) {
+          lastDirection = dir.boundaryDirection!;
+          _directionPath.last = _directionPath //
+              .last
+              .copyWith(value2: _directionPath.last.second + _speed);
+        }
+      },
     );
 
     direction.mapOrNull(
-      down: (_) => position += Vector2(0, gameRef.playboardSize.y * _speed),
-      left: (_) => position += Vector2(-gameRef.playboardSize.x * _speed, 0),
-      right: (_) => position += Vector2(gameRef.playboardSize.x * _speed, 0),
-      up: (_) => position += Vector2(0, -gameRef.playboardSize.y * _speed),
-    );
-
-    super.update(dt);
+        down: (_) => position += Vector2(0, gameRef.playboardSize.y * _speed),
+        left: (_) => position += Vector2(-gameRef.playboardSize.x * _speed, 0),
+        right: (_) => position += Vector2(gameRef.playboardSize.x * _speed, 0),
+        up: (_) => position += Vector2(0, -gameRef.playboardSize.y * _speed),
+        none: (dir) {
+          if (dir.boundaryDirection != null) {
+            dir.boundaryDirection!.mapOrNull(
+              down: (_) =>
+                  position += Vector2(0, gameRef.playboardSize.y * _speed),
+              left: (_) =>
+                  position += Vector2(-gameRef.playboardSize.x * _speed, 0),
+              right: (_) =>
+                  position += Vector2(gameRef.playboardSize.x * _speed, 0),
+              up: (_) =>
+                  position += Vector2(0, -gameRef.playboardSize.y * _speed),
+            );
+          }
+        });
   }
 
   @override
@@ -130,16 +159,48 @@ class Player extends PositionComponent //
   void onCollision(Set<Vector2> intersectionPoints, Collidable other) {
     bodyPaint.color = const Color(0xFFD60A0A);
     if (other is BoundaryLeft) {
-      onBoundarySet.add(const Boundary.left());
+      direction.mapOrNull(
+        none: (dir) {
+          if (dir.boundaryDirection != null) {
+            dir.boundaryDirection!
+                .mapOrNull(left: (_) => direction = const Direction.none());
+          }
+        },
+      );
+      collidedBoundarySet.add(const Boundary.left());
     }
     if (other is BoundaryRight) {
-      onBoundarySet.add(const Boundary.right());
+      direction.mapOrNull(
+        none: (dir) {
+          if (dir.boundaryDirection != null) {
+            dir.boundaryDirection!
+                .mapOrNull(right: (_) => direction = const Direction.none());
+          }
+        },
+      );
+      collidedBoundarySet.add(const Boundary.right());
     }
     if (other is BoundaryTop) {
-      onBoundarySet.add(const Boundary.top());
+      direction.mapOrNull(
+        none: (dir) {
+          if (dir.boundaryDirection != null) {
+            dir.boundaryDirection!
+                .mapOrNull(up: (_) => direction = const Direction.none());
+          }
+        },
+      );
+      collidedBoundarySet.add(const Boundary.top());
     }
     if (other is BoundaryBottom) {
-      onBoundarySet.add(const Boundary.bottom());
+      direction.mapOrNull(
+        none: (dir) {
+          if (dir.boundaryDirection != null) {
+            dir.boundaryDirection!
+                .mapOrNull(down: (_) => direction = const Direction.none());
+          }
+        },
+      );
+      collidedBoundarySet.add(const Boundary.bottom());
     }
   }
 
@@ -147,16 +208,16 @@ class Player extends PositionComponent //
   void onCollisionEnd(Collidable other) {
     bodyPaint.color = const Color(0xFFFFB20D);
     if (other is BoundaryLeft) {
-      onBoundarySet.remove(const Boundary.left());
+      collidedBoundarySet.remove(const Boundary.left());
     }
     if (other is BoundaryRight) {
-      onBoundarySet.remove(const Boundary.right());
+      collidedBoundarySet.remove(const Boundary.right());
     }
     if (other is BoundaryTop) {
-      onBoundarySet.remove(const Boundary.top());
+      collidedBoundarySet.remove(const Boundary.top());
     }
     if (other is BoundaryBottom) {
-      onBoundarySet.remove(const Boundary.bottom());
+      collidedBoundarySet.remove(const Boundary.bottom());
     }
   }
 
@@ -167,6 +228,29 @@ class Player extends PositionComponent //
     position = resizePosition;
   }
 
+  bool _isOppositeDirection(Direction direction) {
+    return lastDirection.opposite == direction;
+  }
+
+  void _moveTo({
+    required Direction direction,
+    required Set<Boundary> allowBoundarySet,
+  }) {
+    if (gameRef.isOutOfBounds(direction)) {
+      return;
+    }
+    if (collidedBoundarySet.intersection(allowBoundarySet).isNotEmpty) {
+      this.direction = Direction.none(direction);
+      return;
+    }
+    if (_isOppositeDirection(direction)) {
+      this.direction = const Direction.none();
+      return;
+    }
+
+    this.direction = direction;
+  }
+
   @override
   bool onKeyEvent(
     RawKeyEvent event,
@@ -174,34 +258,25 @@ class Player extends PositionComponent //
   ) {
     if (event is RawKeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-        if (lastDirection.opposite == const Direction.up() ||
-            onBoundarySet.contains(const Boundary.top())) {
-          direction = const Direction.none();
-          return true;
-        }
-        direction = const Direction.up();
+        _moveTo(
+          direction: const Direction.up(),
+          allowBoundarySet: {const Boundary.left(), const Boundary.right()},
+        );
       } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        if (lastDirection.opposite == const Direction.down() ||
-            onBoundarySet.contains(const Boundary.bottom())) {
-          direction = const Direction.none();
-          return true;
-        }
-        direction = const Direction.down();
+        _moveTo(
+          direction: const Direction.down(),
+          allowBoundarySet: {const Boundary.left(), const Boundary.right()},
+        );
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        if (lastDirection.opposite == const Direction.left() ||
-            onBoundarySet.contains(const Boundary.left())) {
-          direction = const Direction.none();
-          return true;
-        }
-
-        direction = const Direction.left();
+        _moveTo(
+          direction: const Direction.left(),
+          allowBoundarySet: {const Boundary.top(), const Boundary.bottom()},
+        );
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        if (lastDirection.opposite == const Direction.right() ||
-            onBoundarySet.contains(const Boundary.right())) {
-          direction = const Direction.none();
-          return true;
-        }
-        direction = const Direction.right();
+        _moveTo(
+          direction: const Direction.right(),
+          allowBoundarySet: {const Boundary.top(), const Boundary.bottom()},
+        );
       } else {
         direction = const Direction.none();
       }
