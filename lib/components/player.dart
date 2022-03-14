@@ -63,13 +63,17 @@ class Player extends PositionComponent //
           none: (dir) {
             if (dir.boundaryDirection != null) {
               dir.boundaryDirection!.mapOrNull(
-                down: (_) => renderDirectionPath.relativeMoveTo(
+                // down: (_) => renderDirectionPath.relativeMoveTo(
+                down: (_) => renderDirectionPath.relativeLineTo(
                     0, -direction.second * gameRef.playboardSize.y),
-                left: (_) => renderDirectionPath.relativeMoveTo(
+                // left: (_) => renderDirectionPath.relativeMoveTo(
+                left: (_) => renderDirectionPath.relativeLineTo(
                     direction.second * gameRef.playboardSize.x, 0),
-                right: (_) => renderDirectionPath.relativeMoveTo(
+                // right: (_) => renderDirectionPath.relativeMoveTo(
+                right: (_) => renderDirectionPath.relativeLineTo(
                     -direction.second * gameRef.playboardSize.x, 0),
-                up: (_) => renderDirectionPath.relativeMoveTo(
+                // up: (_) => renderDirectionPath.relativeMoveTo(
+                up: (_) => renderDirectionPath.relativeLineTo(
                     0, direction.second * gameRef.playboardSize.y),
               );
             }
@@ -92,6 +96,9 @@ class Player extends PositionComponent //
       ),
     );
   }
+
+  @override
+  bool get debugMode => true;
 
   @override
   void update(double dt) {
@@ -151,7 +158,7 @@ class Player extends PositionComponent //
   @override
   void render(Canvas canvas) {
     final renderDirectionPath = _drawDirectionPath();
-    canvas.drawPath(renderDirectionPath, _directionPaint);
+    canvas.drawPath(renderDirectionPath..close(), _directionPaint);
     canvas.drawPath(path, bodyPaint);
   }
 
@@ -244,7 +251,7 @@ class Player extends PositionComponent //
       return;
     }
     if (_isOppositeDirection(direction)) {
-      this.direction = const Direction.none();
+      // this.direction = const Direction.none();
       return;
     }
 

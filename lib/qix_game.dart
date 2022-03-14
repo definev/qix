@@ -1,5 +1,7 @@
+import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flutter/painting.dart';
 
 import 'components/boundary/boundary.dart';
 import 'components/boundary/on_boundary.dart';
@@ -9,7 +11,8 @@ import 'helpers/direction.dart';
 class QixGame extends FlameGame //
     with
         HasKeyboardHandlerComponents,
-        HasCollidables {
+        HasCollidables,
+        FPSCounter {
   late Player player = Player()..position = initialPlayerPosition;
   var left = BoundaryLeft();
   var right = BoundaryRight();
@@ -18,6 +21,8 @@ class QixGame extends FlameGame //
 
   Vector2 get initialPlayerPosition => Vector2(size.x / 2, size.y - 25);
   Vector2 get playboardSize => size - Vector2(50, 50);
+
+  TextComponent fpsText = TextComponent();
 
   bool _isOutOfBound(Direction direction, Boundary boundary) {
     return boundary.map(
@@ -81,5 +86,13 @@ class QixGame extends FlameGame //
     add(top);
     add(bottom);
     add(player);
+    add(fpsText);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final fpsCount = fps(60); // The average FPS for the last 120 microseconds.
+    fpsText.text = 'FPS: $fpsCount';
+    super.render(canvas);
   }
 }
