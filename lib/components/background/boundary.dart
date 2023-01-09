@@ -13,6 +13,11 @@ class Boundary extends PositionComponent with HasGameReference, CollisionCallbac
   Vector2 get bottomLeft => Vector2(insets.left, game.size.y - insets.bottom);
   Vector2 get bottomRight => Vector2(game.size.x - insets.right, game.size.y - insets.bottom);
 
+  RectangleHitbox? leftWall;
+  RectangleHitbox? rightWall;
+  RectangleHitbox? topWall;
+  RectangleHitbox? bottomWall;
+
   @override
   Paint get paint => Paint()
     ..color = Colors.green
@@ -21,27 +26,52 @@ class Boundary extends PositionComponent with HasGameReference, CollisionCallbac
     ..strokeCap = StrokeCap.round;
 
   void createWall() {
-    add(RectangleHitbox(
+    leftWall = RectangleHitbox(
       position: Vector2(insets.left, insets.top),
       size: Vector2(1, game.size.y - insets.vertical),
-    ));
-    add(RectangleHitbox(
+    );
+    rightWall = RectangleHitbox(
       position: Vector2(game.size.x - insets.right, insets.top),
       size: Vector2(1, game.size.y - insets.vertical),
-    ));
-    add(RectangleHitbox(
+    );
+
+    topWall = RectangleHitbox(
       position: Vector2(insets.left, insets.top),
       size: Vector2(game.size.x - insets.horizontal, 1),
-    ));
-    add(RectangleHitbox(
+    );
+    bottomWall = RectangleHitbox(
       position: Vector2(insets.left, game.size.y - insets.bottom),
       size: Vector2(game.size.x - insets.horizontal, 1),
-    ));
+    );
+  }
+
+  void updateWall() {
+    leftWall?.position = Vector2(insets.left, insets.top);
+    leftWall?.size = Vector2(1, game.size.y - insets.vertical);
+
+    rightWall?.position = Vector2(game.size.x - insets.right, insets.top);
+    rightWall?.size = Vector2(1, game.size.y - insets.vertical);
+
+    topWall?.position = Vector2(insets.left, insets.top);
+    topWall?.size = Vector2(game.size.x - insets.horizontal, 1);
+
+    bottomWall?.position = Vector2(insets.left, game.size.y - insets.bottom);
+    bottomWall?.size = Vector2(game.size.x - insets.horizontal, 1);
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    updateWall();
   }
 
   @override
   Future<void>? onLoad() async {
     createWall();
+    add(leftWall!);
+    add(rightWall!);
+    add(topWall!);
+    add(bottomWall!);
   }
 
   @override
