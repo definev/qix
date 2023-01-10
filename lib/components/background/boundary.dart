@@ -4,7 +4,7 @@ import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/utils/line_hit_box.dart';
 
-class Boundary extends PositionComponent with HasGameReference, CollisionCallbacks, HasPaint {
+class Boundary extends PositionComponent with HasGameReference, HasPaint {
   Boundary({super.children});
 
   EdgeInsets insets = const EdgeInsets.all(50);
@@ -27,11 +27,22 @@ class Boundary extends PositionComponent with HasGameReference, CollisionCallbac
     ..strokeCap = StrokeCap.round;
 
   void createWall() {
-    leftWall = LineHitBox.create(from: topLeft, to: bottomLeft);
-    rightWall = LineHitBox.create(from: topRight, to: bottomRight);
-    topWall = LineHitBox.create(from: topLeft, to: topRight);
-    bottomWall = LineHitBox.create(from: bottomLeft, to: bottomRight);
-
+    leftWall = LineHitBox.create(
+      from: topLeft + Vector2(0, -1),
+      to: bottomLeft + Vector2(0, 1),
+    );
+    rightWall = LineHitBox.create(
+      from: topRight + Vector2(0, -1),
+      to: bottomRight + Vector2(0, 1),
+    );
+    topWall = LineHitBox.create(
+      from: topLeft + Vector2(-1, 0),
+      to: topRight + Vector2(1, 0),
+    );
+    bottomWall = LineHitBox.create(
+      from: bottomLeft + Vector2(-1, 0),
+      to: bottomRight + Vector2(1, 0),
+    );
   }
 
   void updateWall() {

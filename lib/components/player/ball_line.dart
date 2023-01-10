@@ -130,7 +130,9 @@ class BallLine extends ShapeComponent //
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other == ball) {
-      ball.direction = null;
+      if (!ball.onBoundary) {
+        ball.direction = null;
+      }
     }
   }
 }

@@ -2,21 +2,23 @@ import 'package:flame/collisions.dart';
 import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 
-class LineHitBox {
-  static RectangleHitbox create({
+class LineHitBox extends RectangleHitbox {
+  LineHitBox._({super.position, super.size});
+
+  factory LineHitBox.create({
     required Vector2 from,
     required Vector2 to,
   }) {
-    RectangleHitbox? hitbox;
+    LineHitBox? hitbox;
 
     if (from.x == to.x) {
       if (from.y > to.y) {
-        hitbox = RectangleHitbox(
+        hitbox = LineHitBox._(
           position: to,
           size: Vector2(1, from.y - to.y),
         );
       } else {
-        hitbox = RectangleHitbox(
+        hitbox = LineHitBox._(
           position: from,
           size: Vector2(1, to.y - from.y),
         );
@@ -25,12 +27,12 @@ class LineHitBox {
 
     if (from.y == to.y) {
       if (from.x > to.x) {
-        hitbox = RectangleHitbox(
+        hitbox = LineHitBox._(
           position: to,
           size: Vector2(from.x - to.x, 1),
         );
       } else {
-        hitbox = RectangleHitbox(
+        hitbox = LineHitBox._(
           position: from,
           size: Vector2(to.x - from.x, 1),
         );
