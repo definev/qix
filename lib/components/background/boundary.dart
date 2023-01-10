@@ -2,11 +2,12 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
+import 'package:qix/components/utils/line_hit_box.dart';
 
 class Boundary extends PositionComponent with HasGameReference, CollisionCallbacks, HasPaint {
   Boundary({super.children});
 
-  EdgeInsets insets = const EdgeInsets.fromLTRB(40, 40, 40, 40);
+  EdgeInsets insets = const EdgeInsets.all(50);
 
   Vector2 get topLeft => Vector2(insets.left, insets.top);
   Vector2 get topRight => Vector2(game.size.x - insets.right, insets.top);
@@ -26,28 +27,11 @@ class Boundary extends PositionComponent with HasGameReference, CollisionCallbac
     ..strokeCap = StrokeCap.round;
 
   void createWall() {
-    leftWall = RectangleHitbox(
-      position: Vector2(insets.left, insets.top),
-      size: Vector2(1, game.size.y - insets.vertical),
-    );
-    rightWall = RectangleHitbox(
-      position: Vector2(game.size.x - insets.right, insets.top),
-      size: Vector2(1, game.size.y - insets.vertical),
-    );
+    leftWall = LineHitBox.create(from: topLeft, to: bottomLeft);
+    rightWall = LineHitBox.create(from: topRight, to: bottomRight);
+    topWall = LineHitBox.create(from: topLeft, to: topRight);
+    bottomWall = LineHitBox.create(from: bottomLeft, to: bottomRight);
 
-    topWall = RectangleHitbox(
-      position: Vector2(insets.left, insets.top),
-      size: Vector2(game.size.x - insets.horizontal, 1),
-    );
-    bottomWall = RectangleHitbox(
-      position: Vector2(insets.left, game.size.y - insets.bottom),
-      size: Vector2(game.size.x - insets.horizontal, 1),
-    );
-
-    leftWall?.debugColor = Colors.transparent;
-    rightWall?.debugColor = Colors.transparent;
-    topWall?.debugColor = Colors.transparent;
-    bottomWall?.debugColor = Colors.transparent;
   }
 
   void updateWall() {

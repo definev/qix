@@ -1,12 +1,15 @@
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/player/ball_line.dart';
+import 'package:qix/main.dart';
 
 class Ball extends CircleComponent
     with //
+        HasGameReference<QixGame>,
         KeyboardHandler,
         ParentIsA<BallLine>,
         HasAncestor<Boundary>,
@@ -20,7 +23,7 @@ class Ball extends CircleComponent
   Paint get paint => Paint()..color = Colors.red;
 
   AxisDirection? direction;
-  bool inPlayground = false;
+  bool onBoundary = true;
 
   @override
   Future<void> onLoad() async {
@@ -44,7 +47,12 @@ class Ball extends CircleComponent
         ..lineTo(size.x, size.y / 2)
         ..lineTo(size.x / 2, size.y)
         ..close(),
-      Paint()..color = Colors.red,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [Colors.orange.shade100, Colors.pink.shade500],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromLTRB(0, 0, size.x, size.y)),
     );
   }
 
@@ -118,7 +126,7 @@ class Ball extends CircleComponent
         to: AxisDirection.up,
       );
 
-      if (inPlayground && prevDirection != direction) {
+      if (!onBoundary && prevDirection != direction) {
         parent.addPoint(center.clone());
       }
     }
@@ -129,10 +137,6 @@ class Ball extends CircleComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-
-    if (other is BallLine) {
-      direction = null;
-    }
 
     if (other is Boundary) {
       onBoundaryCollided(intersectionPoints, other);
@@ -149,9 +153,9 @@ class Ball extends CircleComponent
       if (point == other.bottomRight) return true;
       return false;
     });
-    if (inPlayground || isCorner) {
+    if (!onBoundary || isCorner) {
       direction = null;
-      inPlayground = false;
+      onBoundary = true;
     }
   }
 
@@ -160,10 +164,13 @@ class Ball extends CircleComponent
     super.onCollisionEnd(other);
     if (other is Boundary) {
       final currentPoint = parent.ball.center.clone();
-      if (direction != null && !ancestor.isCorner(currentPoint)) {
-        parent.addPoint(parent.ball.center);
+      final onCorner = ancestor.isCorner(currentPoint);
+      if (direction != null && !onCorner) {
+        parent.addPoint(parent.ball.center.clone());
+      }
+      if (!onCorner) {
+        onBoundary = false;
       }
     }
-    inPlayground = true;
   }
 }
