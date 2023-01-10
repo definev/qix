@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
@@ -12,7 +14,7 @@ class BallLine extends ShapeComponent with HasGameReference, HasAncestor<Boundar
   late final ball = Ball();
 
   List<RectangleHitbox> hitBoxes = [];
-  final _continueHitbox = RectangleHitbox();
+  final _latestLine = RectangleHitbox();
 
   Paint linePaint = Paint()
     ..strokeWidth = 3
@@ -20,22 +22,21 @@ class BallLine extends ShapeComponent with HasGameReference, HasAncestor<Boundar
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round;
 
-  void addPoint(Vector2 point) {
+  void addPoint(Vector2 point) async {
     _points.add(point);
     if (_points.length >= 2) {
       final prevPoint = _points[_points.length - 2];
-      final hitbox = createRectangleFromPoint(prevPoint, point);
-      if (hitbox != null) {
-        hitBoxes.add(hitbox);
-        add(hitbox);
-      }
+      final hitbox = await createRectangleFromPoint(prevPoint, point);
+      if (hitbox == null) return;
+      hitBoxes.add(hitbox);
+      add(hitbox);
     }
   }
 
   @override
   Future<void>? onLoad() async {
     add(ball);
-    add(_continueHitbox);
+    add(_latestLine);
   }
 
   @override
@@ -65,57 +66,59 @@ class BallLine extends ShapeComponent with HasGameReference, HasAncestor<Boundar
   }
 
   void setCurrentHitBox(Vector2 prevPoint, Vector2 point) {
+    const expand = 8;
+
     if (prevPoint.x == point.x) {
       if (prevPoint.y > point.y) {
-        _continueHitbox.position = point;
-        _continueHitbox.size = Vector2(1, prevPoint.y - point.y);
+        _latestLine.position = Vector2(point.x, point.y + expand);
       } else {
-        _continueHitbox.position = prevPoint;
-        _continueHitbox.size = Vector2(1, point.y - prevPoint.y);
+        _latestLine.position = prevPoint;
       }
+      _latestLine.size = Vector2(1, max((point.y - prevPoint.y).abs() - expand, 0));
     }
 
     if (prevPoint.y == point.y) {
       if (prevPoint.x > point.x) {
-        _continueHitbox.position = point;
-        _continueHitbox.size = Vector2(prevPoint.x - point.x, 1);
+        _latestLine.position = Vector2(point.x + expand, point.y);
       } else {
-        _continueHitbox.position = prevPoint;
-        _continueHitbox.size = Vector2(point.x - prevPoint.x, 1);
+        _latestLine.position = prevPoint;
       }
+      _latestLine.size = Vector2(max((prevPoint.x - point.x).abs() - expand, 0), 1);
     }
   }
 
-  RectangleHitbox? createRectangleFromPoint(Vector2 prevPoint, Vector2 point) {
-    RectangleHitbox? hitbox;
-    if (prevPoint.x == point.x) {
-      if (prevPoint.y > point.y) {
-        hitbox = RectangleHitbox(
-          position: point,
-          size: Vector2(1, prevPoint.y - point.y),
-        );
-      } else {
-        hitbox = RectangleHitbox(
-          position: prevPoint,
-          size: Vector2(1, point.y - prevPoint.y),
-        );
+  Future<RectangleHitbox?> createRectangleFromPoint(Vector2 prevPoint, Vector2 point) async {
+    return await Future.delayed(const Duration(milliseconds: 200), () {
+      RectangleHitbox? hitbox;
+      if (prevPoint.x == point.x) {
+        if (prevPoint.y > point.y) {
+          hitbox = RectangleHitbox(
+            position: point,
+            size: Vector2(1, prevPoint.y - point.y),
+          );
+        } else {
+          hitbox = RectangleHitbox(
+            position: prevPoint,
+            size: Vector2(1, point.y - prevPoint.y),
+          );
+        }
       }
-    }
 
-    if (prevPoint.y == point.y) {
-      if (prevPoint.x > point.x) {
-        hitbox = RectangleHitbox(
-          position: point,
-          size: Vector2(prevPoint.x - point.x, 1),
-        );
-      } else {
-        hitbox = RectangleHitbox(
-          position: prevPoint,
-          size: Vector2(point.x - prevPoint.x, 1),
-        );
+      if (prevPoint.y == point.y) {
+        if (prevPoint.x > point.x) {
+          hitbox = RectangleHitbox(
+            position: point,
+            size: Vector2(prevPoint.x - point.x, 1),
+          );
+        } else {
+          hitbox = RectangleHitbox(
+            position: prevPoint,
+            size: Vector2(point.x - prevPoint.x, 1),
+          );
+        }
       }
-    }
 
-    return hitbox;
+      return hitbox;
+    });
   }
 }

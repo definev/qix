@@ -43,6 +43,11 @@ class Boundary extends PositionComponent with HasGameReference, CollisionCallbac
       position: Vector2(insets.left, game.size.y - insets.bottom),
       size: Vector2(game.size.x - insets.horizontal, 1),
     );
+
+    leftWall?.debugColor = Colors.transparent;
+    rightWall?.debugColor = Colors.transparent;
+    topWall?.debugColor = Colors.transparent;
+    bottomWall?.debugColor = Colors.transparent;
   }
 
   void updateWall() {

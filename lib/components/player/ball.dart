@@ -29,7 +29,7 @@ class Ball extends CircleComponent
       radius: 1,
       position: center,
       isSolid: true,
-    ));
+    )..debugColor = Colors.transparent);
   }
 
   @override
@@ -130,20 +130,28 @@ class Ball extends CircleComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
 
+    if (other is BallLine) {
+      direction = null;
+    }
+
     if (other is Boundary) {
-      bool isCorner = intersectionPoints.fold(false, (val, point) {
-        if (val) return true;
-        point.round();
-        if (point == other.topLeft) return true;
-        if (point == other.topRight) return true;
-        if (point == other.bottomLeft) return true;
-        if (point == other.bottomRight) return true;
-        return false;
-      });
-      if (inPlayground || isCorner) {
-        direction = null;
-        inPlayground = false;
-      }
+      onBoundaryCollided(intersectionPoints, other);
+    }
+  }
+
+  void onBoundaryCollided(Set<Vector2> intersectionPoints, Boundary other) {
+    bool isCorner = intersectionPoints.fold(false, (val, point) {
+      if (val) return true;
+      point.round();
+      if (point == other.topLeft) return true;
+      if (point == other.topRight) return true;
+      if (point == other.bottomLeft) return true;
+      if (point == other.bottomRight) return true;
+      return false;
+    });
+    if (inPlayground || isCorner) {
+      direction = null;
+      inPlayground = false;
     }
   }
 

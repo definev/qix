@@ -6,7 +6,15 @@ import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/ball_line.dart';
 
 void main() {
-  runApp(const GameWidget.controlled(gameFactory: QixGame.new));
+  runApp(
+    const Center(
+      child: SizedBox(
+        height: 400,
+        width: 400,
+        child: GameWidget.controlled(gameFactory: QixGame.new),
+      ),
+    ),
+  );
 }
 
 class QixGame extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection {
