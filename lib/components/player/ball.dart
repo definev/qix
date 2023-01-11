@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/player/ball_line.dart';
+import 'package:qix/components/player/collision/boundary.dart';
 import 'package:qix/main.dart';
 
 enum BallPosition { playground, boundary, corner }
@@ -12,9 +13,9 @@ enum BallPosition { playground, boundary, corner }
 class Ball extends CircleComponent
     with //
         HasGameReference<QixGame>,
-        KeyboardHandler,
-        ParentIsA<BallLine>,
         HasAncestor<Boundary>,
+        ParentIsA<BallLine>,
+        KeyboardHandler,
         CollisionCallbacks {
   Ball({
     super.radius = 8,
@@ -22,6 +23,8 @@ class Ball extends CircleComponent
   });
 
   AxisDirection? _direction;
+  AxisDirection? get direction => _direction;
+
   void stop([String? from]) {
     if (from != null) debugPrint('STOP FROM : $from');
     _direction = null;
@@ -29,6 +32,8 @@ class Ball extends CircleComponent
 
   BallPosition ballPosition = BallPosition.boundary;
   late CircleHitbox cue;
+
+  late final BallNBoundaryColision _boundaryCollision;
 
   @override
   Paint get paint => Paint()..color = Colors.red;
@@ -45,7 +50,10 @@ class Ball extends CircleComponent
   }
 
   @override
-  Color get debugColor => Colors.transparent;
+  void onMount() {
+    super.onMount();
+    _boundaryCollision = BallNBoundaryColision(this, ancestor);
+  }
 
   @override
   void render(Canvas canvas) {
@@ -99,41 +107,52 @@ class Ball extends CircleComponent
         return;
       }
       _direction = to;
-      final onWall = ancestor.onWall(center);
-      final onCorner = ancestor.onCorner(center);
-      if (onWall == null) {
-        ballPosition = BallPosition.playground;
-      }
-      if (onWall == to) {
+      final wall = ancestor.onWall(center);
+      final corner = ancestor.onCorner(center);
+      if (wall == null) ballPosition = BallPosition.playground;
+
+      if (wall == to) {
         stop('onWall');
         ballPosition = BallPosition.boundary;
       }
 
-      if (onCorner == Alignment.topLeft) {
-        if (to == AxisDirection.up || to == AxisDirection.left) {
-          stop('on corner');
-          ballPosition = BallPosition.boundary;
-        }
-      }
-      if (onCorner == Alignment.topRight) {
-        if (to == AxisDirection.up || to == AxisDirection.right) {
-          stop('on corner');
-          ballPosition = BallPosition.boundary;
-        }
-      }
+      _stopIfOutsideCorner(
+        corner,
+        Alignment.topLeft,
+        firstPreventDirection: AxisDirection.up,
+        secondPreventDirection: AxisDirection.left,
+      );
+      _stopIfOutsideCorner(
+        corner,
+        Alignment.topRight,
+        firstPreventDirection: AxisDirection.up,
+        secondPreventDirection: AxisDirection.right,
+      );
+      _stopIfOutsideCorner(
+        corner,
+        Alignment.bottomLeft,
+        firstPreventDirection: AxisDirection.down,
+        secondPreventDirection: AxisDirection.left,
+      );
+      _stopIfOutsideCorner(
+        corner,
+        Alignment.bottomRight,
+        firstPreventDirection: AxisDirection.down,
+        secondPreventDirection: AxisDirection.right,
+      );
+    }
+  }
 
-      if (onCorner == Alignment.bottomLeft) {
-        if (to == AxisDirection.down || to == AxisDirection.left) {
-          stop('on corner');
-          ballPosition = BallPosition.boundary;
-        }
-      }
-
-      if (onCorner == Alignment.bottomRight) {
-        if (to == AxisDirection.down || to == AxisDirection.right) {
-          stop('on corner');
-          ballPosition = BallPosition.boundary;
-        }
+  void _stopIfOutsideCorner(
+    Alignment? corner,
+    Alignment desireCorner, {
+    required AxisDirection firstPreventDirection,
+    required AxisDirection secondPreventDirection,
+  }) {
+    if (corner == desireCorner) {
+      if (_direction == firstPreventDirection || _direction == firstPreventDirection) {
+        stop('on corner');
+        ballPosition = BallPosition.boundary;
       }
     }
   }
@@ -181,58 +200,16 @@ class Ball extends CircleComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-
     if (other is Boundary) {
-      onBoundaryCollided(intersectionPoints, other);
+      _boundaryCollision.onCollision(intersectionPoints);
     }
   }
 
-  void onBoundaryCollided(Set<Vector2> intersectionPoints, Boundary other) {
-    Vector2? corner = intersectionPoints.fold(null, (val, point) {
-      final p = point.clone()..round();
-      if (val != null) return val;
-      if (p == other.topLeft) return other.topLeft;
-      if (p == other.topRight) return other.topRight;
-      if (p == other.bottomLeft) return other.bottomLeft;
-      if (p == other.bottomRight) return other.bottomRight;
-      return null;
-    });
-    bool preventOutOfCorner = false;
-
-    bool checkPreventOutOfCorner(
-      Alignment alignment,
-      Alignment desireAlignment,
-      AxisDirection preventAxisOne,
-      AxisDirection preventAxisTwo,
-    ) {
-      if (alignment == desireAlignment) {
-        if (_direction == preventAxisOne || _direction == preventAxisTwo) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    if (corner != null) {
-      if (ballPosition != BallPosition.corner) center = corner;
-
-      final alignment = other.onCorner(center)!;
-      preventOutOfCorner =
-          checkPreventOutOfCorner(alignment, Alignment.topLeft, AxisDirection.left, AxisDirection.up) ||
-              checkPreventOutOfCorner(alignment, Alignment.topRight, AxisDirection.right, AxisDirection.up) ||
-              checkPreventOutOfCorner(alignment, Alignment.bottomLeft, AxisDirection.left, AxisDirection.down) ||
-              checkPreventOutOfCorner(alignment, Alignment.bottomRight, AxisDirection.right, AxisDirection.down);
-
-      if (ballPosition != BallPosition.corner) ballPosition = BallPosition.corner;
-    } else {
-      if (ballPosition == BallPosition.corner) {
-        ballPosition = BallPosition.boundary;
-      }
-    }
-
-    if (ballPosition == BallPosition.playground || preventOutOfCorner) {
-      stop('boundary');
-      ballPosition = BallPosition.boundary;
+  @override
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
+    if (other is Boundary) {
+      _boundaryCollision.onCollisionStart(intersectionPoints);
     }
   }
 
@@ -240,11 +217,7 @@ class Ball extends CircleComponent
   void onCollisionEnd(PositionComponent other) {
     super.onCollisionEnd(other);
     if (other is Boundary) {
-      final currentPoint = center.clone()..round();
-      final onCorner = ancestor.isCorner(currentPoint);
-      if (_direction != null && !onCorner) {
-        parent.addPoint(parent.ball.center.clone());
-      }
+      _boundaryCollision.onCollisionEnd();
     }
   }
 }

@@ -5,19 +5,21 @@ import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
+import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/ball.dart';
 
 class BallLine extends ShapeComponent //
     with
         HasGameReference,
+        ParentIsA<FilledArea>,
         HasAncestor<Boundary>,
         CollisionCallbacks {
   BallLine({super.children});
 
-  late final List<Vector2> _points = [];
+  late List<Vector2> points = [];
   late final ball = Ball();
 
-  List<RectangleHitbox> hitBoxes = [];
+  List<RectangleHitbox> _hitBoxes = [];
   final _latestLine = RectangleHitbox();
 
   Paint linePaint = Paint()
@@ -27,12 +29,12 @@ class BallLine extends ShapeComponent //
     ..strokeCap = StrokeCap.round;
 
   void addPoint(Vector2 point) async {
-    _points.add(point);
-    if (_points.length >= 2) {
-      final prevPoint = _points[_points.length - 2];
+    points.add(point);
+    if (points.length >= 2) {
+      final prevPoint = points[points.length - 2];
       final hitbox = await createRectangleFromPoint(prevPoint, point);
       if (hitbox == null) return;
-      hitBoxes.add(hitbox);
+      _hitBoxes.add(hitbox);
       add(hitbox);
     }
   }
@@ -109,19 +111,19 @@ class BallLine extends ShapeComponent //
 
   @override
   void update(double dt) {
-    if (_points.isNotEmpty) setCurrentHitBox(_points.last, ball.center);
+    if (points.isNotEmpty) setCurrentHitBox(points.last, ball.center);
   }
 
   @override
   void render(Canvas canvas) {
-    for (var index = 0; index < _points.length - 1; index++) {
-      final p1 = _points[index].toOffset();
-      final p2 = _points[index + 1].toOffset();
+    for (var index = 0; index < points.length - 1; index++) {
+      final p1 = points[index].toOffset();
+      final p2 = points[index + 1].toOffset();
       canvas.drawLine(p1, p2, linePaint);
     }
 
-    if (_points.isNotEmpty) {
-      final p1 = _points.last.toOffset();
+    if (points.isNotEmpty) {
+      final p1 = points.last.toOffset();
       final p2 = ball.center.toOffset();
       canvas.drawLine(p1, p2, linePaint);
     }
@@ -135,5 +137,10 @@ class BallLine extends ShapeComponent //
         ball.stop();
       }
     }
+  }
+
+  void resetLine() {
+    _hitBoxes = [];
+    points = [];
   }
 }

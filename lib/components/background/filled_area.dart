@@ -26,6 +26,7 @@ class FilledArea extends PositionComponent {
   void drawArea(Canvas canvas, int index) {
     final area = _areas[index];
     final iter = area.iterator;
+    iter.moveNext();
     final path = Path()..moveTo(iter.current.x, iter.current.y);
 
     while (iter.moveNext()) {
