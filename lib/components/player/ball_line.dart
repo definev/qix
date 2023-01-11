@@ -38,6 +38,7 @@ class BallLine extends ShapeComponent //
   }
 
   void setCurrentHitBox(Vector2 prevPoint, Vector2 point) {
+    if (point.distanceToSquared(prevPoint) < 4) return;
     const expand = 8;
 
     if (prevPoint.x == point.x) {
@@ -130,8 +131,8 @@ class BallLine extends ShapeComponent //
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other == ball) {
-      if (!ball.onBoundary) {
-        ball.direction = null;
+      if (!ball.collidingWith(ancestor)) {
+        ball.stop();
       }
     }
   }

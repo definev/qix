@@ -14,10 +14,47 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   Vector2 get bottomLeft => Vector2(insets.left, game.size.y - insets.bottom);
   Vector2 get bottomRight => Vector2(game.size.x - insets.right, game.size.y - insets.bottom);
 
-  RectangleHitbox? leftWall;
-  RectangleHitbox? rightWall;
-  RectangleHitbox? topWall;
-  RectangleHitbox? bottomWall;
+  late LineHitBox leftWall;
+  late LineHitBox rightWall;
+  late LineHitBox topWall;
+  late LineHitBox bottomWall;
+
+  AxisDirection? onWall(Vector2 point) {
+    final p = point.clone()..ceil();
+    Set<Vector2> points = {
+      p + Vector2(0, -1),
+      p + Vector2(-1, 0),
+      p,
+      p + Vector2(1, 0),
+      p + Vector2(0, 1),
+    };
+
+    bool isOnWall(LineHitBox wall) {
+      for (var p in points) {
+        if (wall.containsPoint(p)) return true;
+      }
+      return false;
+    }
+
+    if (isOnWall(leftWall)) {
+      print('left');
+      return AxisDirection.left;
+    }
+    if (isOnWall(rightWall)) {
+      print('right');
+      return AxisDirection.right;
+    }
+    if (isOnWall(topWall)) {
+      print('up');
+      return AxisDirection.up;
+    }
+    if (isOnWall(bottomWall)) {
+      print('down');
+      return AxisDirection.down;
+    }
+
+    return null;
+  }
 
   @override
   Paint get paint => Paint()
@@ -27,51 +64,37 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
     ..strokeCap = StrokeCap.round;
 
   void createWall() {
-    leftWall = LineHitBox.create(
-      from: topLeft + Vector2(0, -1),
-      to: bottomLeft + Vector2(0, 1),
-    );
-    rightWall = LineHitBox.create(
-      from: topRight + Vector2(0, -1),
-      to: bottomRight + Vector2(0, 1),
-    );
-    topWall = LineHitBox.create(
-      from: topLeft + Vector2(-1, 0),
-      to: topRight + Vector2(1, 0),
-    );
-    bottomWall = LineHitBox.create(
-      from: bottomLeft + Vector2(-1, 0),
-      to: bottomRight + Vector2(1, 0),
-    );
+    leftWall = LineHitBox.create(from: topLeft, to: bottomLeft);
+    topWall = LineHitBox.create(from: topLeft, to: topRight);
+    rightWall = LineHitBox.create(from: topRight, to: bottomRight);
+    bottomWall = LineHitBox.create(from: bottomLeft, to: bottomRight);
   }
 
   void updateWall() {
-    leftWall?.position = Vector2(insets.left, insets.top);
-    leftWall?.size = Vector2(1, game.size.y - insets.vertical);
+    leftWall.position = Vector2(insets.left, insets.top);
+    leftWall.size = Vector2(1, game.size.y - insets.vertical);
 
-    rightWall?.position = Vector2(game.size.x - insets.right, insets.top);
-    rightWall?.size = Vector2(1, game.size.y - insets.vertical);
+    rightWall.position = Vector2(game.size.x - insets.right, insets.top);
+    rightWall.size = Vector2(1, game.size.y - insets.vertical);
 
-    topWall?.position = Vector2(insets.left, insets.top);
-    topWall?.size = Vector2(game.size.x - insets.horizontal, 1);
+    topWall.position = Vector2(insets.left, insets.top);
+    topWall.size = Vector2(game.size.x - insets.horizontal, 1);
 
-    bottomWall?.position = Vector2(insets.left, game.size.y - insets.bottom);
-    bottomWall?.size = Vector2(game.size.x - insets.horizontal, 1);
-  }
-
-  @override
-  void onGameResize(Vector2 size) {
-    super.onGameResize(size);
-    updateWall();
+    bottomWall.position = Vector2(insets.left, game.size.y - insets.bottom);
+    bottomWall.size = Vector2(game.size.x - insets.horizontal, 1);
   }
 
   @override
   Future<void>? onLoad() async {
     createWall();
-    add(leftWall!);
-    add(rightWall!);
-    add(topWall!);
-    add(bottomWall!);
+    // add(leftWall);
+    // add(topWall);
+    // add(rightWall);
+    // add(bottomWall);
+    add(PolygonHitbox(
+      [topLeft, topRight, bottomRight, bottomLeft],
+      isSolid: false,
+    ));
   }
 
   @override
@@ -85,13 +108,25 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   bool isCorner(Vector2 point) {
     point.round();
     final distToTopLeft = point.distanceTo(topLeft);
-    if (distToTopLeft <= 4) return true;
+    if (distToTopLeft <= 2) return true;
     final distToTopRight = point.distanceTo(topRight);
-    if (distToTopRight <= 4) return true;
+    if (distToTopRight <= 2) return true;
     final distToBottomLeft = point.distanceTo(bottomLeft);
-    if (distToBottomLeft <= 4) return true;
+    if (distToBottomLeft <= 2) return true;
     final distToBottomRight = point.distanceTo(bottomRight);
-    if (distToBottomRight <= 4) return true;
+    if (distToBottomRight <= 2) return true;
     return false;
+  }
+
+  Alignment? onCorner(Vector2 point) {
+    final distToTopLeft = point.distanceTo(topLeft);
+    if (distToTopLeft <= 2) return Alignment.topLeft;
+    final distToTopRight = point.distanceTo(topRight);
+    if (distToTopRight <= 2) return Alignment.topRight;
+    final distToBottomLeft = point.distanceTo(bottomLeft);
+    if (distToBottomLeft <= 2) return Alignment.bottomLeft;
+    final distToBottomRight = point.distanceTo(bottomRight);
+    if (distToBottomRight <= 2) return Alignment.bottomRight;
+    return null;
   }
 }

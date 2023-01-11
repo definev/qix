@@ -19,7 +19,7 @@ void main() {
 
 class QixGame extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection {
   @override
-  bool get debugMode => true;
+  bool get debugMode => false;
 
   @override
   Future<void>? onLoad() async {

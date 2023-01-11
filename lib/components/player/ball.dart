@@ -7,6 +7,8 @@ import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/player/ball_line.dart';
 import 'package:qix/main.dart';
 
+enum BallPosition { playground, boundary }
+
 class Ball extends CircleComponent
     with //
         HasGameReference<QixGame>,
@@ -19,20 +21,27 @@ class Ball extends CircleComponent
     super.position,
   });
 
+  AxisDirection? _direction;
+  void stop([String? from]) {
+    if (from != null) print('STOP FROM : $from');
+    _direction = null;
+  }
+
+  BallPosition ballPosition = BallPosition.boundary;
+  late CircleHitbox cue;
+
   @override
   Paint get paint => Paint()..color = Colors.red;
-
-  AxisDirection? direction;
-  bool onBoundary = true;
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    add(CircleHitbox(
+    add(cue = CircleHitbox(
       radius: 1,
       position: center,
       isSolid: true,
-    )..debugColor = Colors.transparent);
+      anchor: Anchor.center,
+    )..debugColor = Colors.cyan);
   }
 
   @override
@@ -61,7 +70,7 @@ class Ball extends CircleComponent
     final dist = 60 * dt;
     final current = position.clone();
 
-    switch (direction) {
+    switch (_direction) {
       case null:
         break;
       case AxisDirection.up:
@@ -86,11 +95,47 @@ class Ball extends CircleComponent
     required AxisDirection to,
   }) {
     if (key == expected) {
-      if (direction == cancelAt) {
-        direction = null;
+      if (_direction == cancelAt) {
+        stop('cancel key');
         return;
       }
-      direction = to;
+      _direction = to;
+      final onWall = ancestor.onWall(center);
+      final onCorner = ancestor.onCorner(center);
+      if (onWall == null) {
+        ballPosition = BallPosition.playground;
+      }
+      if (onWall == to) {
+        stop('onWall');
+        ballPosition = BallPosition.boundary;
+      }
+
+      if (onCorner == Alignment.topLeft) {
+        if (to == AxisDirection.up || to == AxisDirection.left) {
+          stop('on corner');
+          ballPosition = BallPosition.boundary;
+        }
+      }
+      if (onCorner == Alignment.topRight) {
+        if (to == AxisDirection.up || to == AxisDirection.right) {
+          stop('on corner');
+          ballPosition = BallPosition.boundary;
+        }
+      }
+
+      if (onCorner == Alignment.bottomLeft) {
+        if (to == AxisDirection.down || to == AxisDirection.left) {
+          stop('on corner');
+          ballPosition = BallPosition.boundary;
+        }
+      }
+
+      if (onCorner == Alignment.bottomRight) {
+        if (to == AxisDirection.down || to == AxisDirection.right) {
+          stop('on corner');
+          ballPosition = BallPosition.boundary;
+        }
+      }
     }
   }
 
@@ -99,7 +144,7 @@ class Ball extends CircleComponent
     if (event.repeat) return true;
     if (keysPressed.length == 1) {
       final key = keysPressed.first;
-      final prevDirection = direction;
+      final prevDirection = _direction;
 
       _handleMovementKey(
         key,
@@ -126,7 +171,7 @@ class Ball extends CircleComponent
         to: AxisDirection.up,
       );
 
-      if (!onBoundary && prevDirection != direction) {
+      if (prevDirection != _direction && !collidingWith(ancestor)) {
         parent.addPoint(center.clone());
       }
     }
@@ -153,9 +198,9 @@ class Ball extends CircleComponent
       if (point == other.bottomRight) return true;
       return false;
     });
-    if (!onBoundary || isCorner) {
-      direction = null;
-      onBoundary = true;
+    if (ballPosition == BallPosition.playground || isCorner) {
+      stop('boundary');
+      ballPosition = BallPosition.boundary;
     }
   }
 
@@ -163,13 +208,10 @@ class Ball extends CircleComponent
   void onCollisionEnd(PositionComponent other) {
     super.onCollisionEnd(other);
     if (other is Boundary) {
-      final currentPoint = parent.ball.center.clone();
+      final currentPoint = center.clone();
       final onCorner = ancestor.isCorner(currentPoint);
-      if (direction != null && !onCorner) {
+      if (_direction != null && !onCorner) {
         parent.addPoint(parent.ball.center.clone());
-      }
-      if (!onCorner) {
-        onBoundary = false;
       }
     }
   }
