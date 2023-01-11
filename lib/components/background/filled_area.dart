@@ -18,7 +18,7 @@ class FilledArea extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
-    for (int index = 0; index < _areas.length; index++) {
+    for (int index = _areas.length - 1; index >= 0; index--) {
       drawArea(canvas, index);
     }
   }
