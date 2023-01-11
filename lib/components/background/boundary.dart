@@ -36,23 +36,10 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
       return false;
     }
 
-    if (isOnWall(leftWall)) {
-      print('left');
-      return AxisDirection.left;
-    }
-    if (isOnWall(rightWall)) {
-      print('right');
-      return AxisDirection.right;
-    }
-    if (isOnWall(topWall)) {
-      print('up');
-      return AxisDirection.up;
-    }
-    if (isOnWall(bottomWall)) {
-      print('down');
-      return AxisDirection.down;
-    }
-
+    if (isOnWall(leftWall)) return AxisDirection.left;
+    if (isOnWall(rightWall)) return AxisDirection.right;
+    if (isOnWall(topWall)) return AxisDirection.up;
+    if (isOnWall(bottomWall)) return AxisDirection.down;
     return null;
   }
 
@@ -87,14 +74,7 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   @override
   Future<void>? onLoad() async {
     createWall();
-    // add(leftWall);
-    // add(topWall);
-    // add(rightWall);
-    // add(bottomWall);
-    add(PolygonHitbox(
-      [topLeft, topRight, bottomRight, bottomLeft],
-      isSolid: false,
-    ));
+    add(PolygonHitbox([topLeft, topRight, bottomRight, bottomLeft], isSolid: false));
   }
 
   @override
@@ -106,7 +86,6 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   }
 
   bool isCorner(Vector2 point) {
-    point.round();
     final distToTopLeft = point.distanceTo(topLeft);
     if (distToTopLeft <= 2) return true;
     final distToTopRight = point.distanceTo(topRight);

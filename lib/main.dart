@@ -7,11 +7,14 @@ import 'package:qix/components/player/ball_line.dart';
 
 void main() {
   runApp(
-    const Center(
-      child: SizedBox(
-        height: 400,
-        width: 400,
-        child: GameWidget.controlled(gameFactory: QixGame.new),
+    Focus(
+      onKey: (FocusNode node, RawKeyEvent event) => KeyEventResult.handled,
+      child: const Center(
+        child: SizedBox(
+          height: 400,
+          width: 400,
+          child: GameWidget.controlled(gameFactory: QixGame.new),
+        ),
       ),
     ),
   );

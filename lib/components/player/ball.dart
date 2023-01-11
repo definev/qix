@@ -7,7 +7,7 @@ import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/player/ball_line.dart';
 import 'package:qix/main.dart';
 
-enum BallPosition { playground, boundary }
+enum BallPosition { playground, boundary, corner }
 
 class Ball extends CircleComponent
     with //
@@ -23,7 +23,7 @@ class Ball extends CircleComponent
 
   AxisDirection? _direction;
   void stop([String? from]) {
-    if (from != null) print('STOP FROM : $from');
+    if (from != null) debugPrint('STOP FROM : $from');
     _direction = null;
   }
 
@@ -68,22 +68,21 @@ class Ball extends CircleComponent
   @override
   void update(double dt) {
     final dist = 60 * dt;
-    final current = position.clone();
 
     switch (_direction) {
       case null:
         break;
       case AxisDirection.up:
-        position = current + Vector2(0, -dist);
+        position += Vector2(0, -dist);
         break;
       case AxisDirection.down:
-        position = current + Vector2(0, dist);
+        position += Vector2(0, dist);
         break;
       case AxisDirection.left:
-        position = current + Vector2(-dist, 0);
+        position += Vector2(-dist, 0);
         break;
       case AxisDirection.right:
-        position = current + Vector2(dist, 0);
+        position += Vector2(dist, 0);
         break;
     }
   }
@@ -189,16 +188,49 @@ class Ball extends CircleComponent
   }
 
   void onBoundaryCollided(Set<Vector2> intersectionPoints, Boundary other) {
-    bool isCorner = intersectionPoints.fold(false, (val, point) {
-      if (val) return true;
-      point.round();
-      if (point == other.topLeft) return true;
-      if (point == other.topRight) return true;
-      if (point == other.bottomLeft) return true;
-      if (point == other.bottomRight) return true;
-      return false;
+    Vector2? corner = intersectionPoints.fold(null, (val, point) {
+      final p = point.clone()..round();
+      if (val != null) return val;
+      if (p == other.topLeft) return other.topLeft;
+      if (p == other.topRight) return other.topRight;
+      if (p == other.bottomLeft) return other.bottomLeft;
+      if (p == other.bottomRight) return other.bottomRight;
+      return null;
     });
-    if (ballPosition == BallPosition.playground || isCorner) {
+    bool preventOutOfCorner = false;
+
+    bool checkPreventOutOfCorner(
+      Alignment alignment,
+      Alignment desireAlignment,
+      AxisDirection preventAxisOne,
+      AxisDirection preventAxisTwo,
+    ) {
+      if (alignment == desireAlignment) {
+        if (_direction == preventAxisOne || _direction == preventAxisTwo) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (corner != null) {
+      if (ballPosition != BallPosition.corner) center = corner;
+
+      final alignment = other.onCorner(center)!;
+      preventOutOfCorner =
+          checkPreventOutOfCorner(alignment, Alignment.topLeft, AxisDirection.left, AxisDirection.up) ||
+              checkPreventOutOfCorner(alignment, Alignment.topRight, AxisDirection.right, AxisDirection.up) ||
+              checkPreventOutOfCorner(alignment, Alignment.bottomLeft, AxisDirection.left, AxisDirection.down) ||
+              checkPreventOutOfCorner(alignment, Alignment.bottomRight, AxisDirection.right, AxisDirection.down);
+
+      if (ballPosition != BallPosition.corner) ballPosition = BallPosition.corner;
+    } else {
+      if (ballPosition == BallPosition.corner) {
+        ballPosition = BallPosition.boundary;
+      }
+    }
+
+    if (ballPosition == BallPosition.playground || preventOutOfCorner) {
       stop('boundary');
       ballPosition = BallPosition.boundary;
     }
@@ -208,7 +240,7 @@ class Ball extends CircleComponent
   void onCollisionEnd(PositionComponent other) {
     super.onCollisionEnd(other);
     if (other is Boundary) {
-      final currentPoint = center.clone();
+      final currentPoint = center.clone()..round();
       final onCorner = ancestor.isCorner(currentPoint);
       if (_direction != null && !onCorner) {
         parent.addPoint(parent.ball.center.clone());
