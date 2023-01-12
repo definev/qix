@@ -45,7 +45,7 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
 
   @override
   Paint get paint => Paint()
-    ..color = Colors.green
+    ..color = Colors.white
     ..strokeWidth = 3
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round;

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -17,6 +18,7 @@ class BallLine extends ShapeComponent //
   BallLine({super.children});
 
   late List<Vector2> points = [];
+  late List<Offset> _rawPoints = [];
   late final ball = Ball();
 
   List<RectangleHitbox> _hitBoxes = [];
@@ -30,6 +32,7 @@ class BallLine extends ShapeComponent //
 
   void addPoint(Vector2 point) async {
     points.add(point);
+    _rawPoints.add(point.toOffset());
     if (points.length >= 2) {
       final prevPoint = points[points.length - 2];
       final hitbox = await createRectangleFromPoint(prevPoint, point);
@@ -98,6 +101,12 @@ class BallLine extends ShapeComponent //
   }
 
   @override
+  // TODO: implement paint
+  Paint get paint => Paint()
+    ..color = Colors.white
+    ..strokeWidth = 2;
+
+  @override
   Future<void>? onLoad() async {
     add(ball);
     add(_latestLine);
@@ -116,17 +125,14 @@ class BallLine extends ShapeComponent //
 
   @override
   void render(Canvas canvas) {
-    for (var index = 0; index < points.length - 1; index++) {
-      final p1 = points[index].toOffset();
-      final p2 = points[index + 1].toOffset();
-      canvas.drawLine(p1, p2, linePaint);
-    }
+    final allPoints = [..._rawPoints];
+    if (points.isNotEmpty) allPoints.add(ball.center.toOffset());
 
-    if (points.isNotEmpty) {
-      final p1 = points.last.toOffset();
-      final p2 = ball.center.toOffset();
-      canvas.drawLine(p1, p2, linePaint);
-    }
+    canvas.drawPoints(
+      PointMode.polygon,
+      allPoints,
+      paint,
+    );
   }
 
   @override
@@ -142,5 +148,6 @@ class BallLine extends ShapeComponent //
   void resetLine() {
     _hitBoxes = [];
     points = [];
+    _rawPoints = [];
   }
 }
