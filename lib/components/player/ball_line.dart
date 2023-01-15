@@ -127,6 +127,7 @@ class BallLine extends ShapeComponent //
   void render(Canvas canvas) {
     final allPoints = [..._rawPoints];
     if (points.isNotEmpty) allPoints.add(ball.center.toOffset());
+    if (allPoints.isEmpty) return;
 
     canvas.drawPoints(
       PointMode.polygon,

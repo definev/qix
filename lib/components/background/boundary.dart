@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
@@ -47,7 +49,6 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   Paint get paint => Paint()
     ..color = Colors.white
     ..strokeWidth = 3
-    ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round;
 
   void createWall() {
@@ -79,10 +80,17 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
 
   @override
   void render(Canvas canvas) {
-    canvas.drawLine(topLeft.toOffset(), topRight.toOffset(), paint);
-    canvas.drawLine(topRight.toOffset(), bottomRight.toOffset(), paint);
-    canvas.drawLine(bottomRight.toOffset(), bottomLeft.toOffset(), paint);
-    canvas.drawLine(bottomLeft.toOffset(), topLeft.toOffset(), paint);
+    canvas.drawPoints(
+      PointMode.polygon,
+      [
+        topLeft.toOffset(),
+        topRight.toOffset(),
+        bottomRight.toOffset(),
+        bottomLeft.toOffset(),
+        topLeft.toOffset(),
+      ],
+      paint,
+    );
   }
 
   bool isCorner(Vector2 point) {

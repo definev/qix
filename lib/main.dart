@@ -4,20 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/ball_line.dart';
+import 'package:universal_io/io.dart';
 
 void main() {
-  runApp(
-    Focus(
-      onKey: (FocusNode node, RawKeyEvent event) => KeyEventResult.handled,
-      child: const Center(
-        child: SizedBox(
-          height: 400,
-          width: 400,
-          child: GameWidget.controlled(gameFactory: QixGame.new),
-        ),
-      ),
+  const game = Center(
+    child: SizedBox(
+      height: 400,
+      width: 400,
+      child: GameWidget.controlled(gameFactory: QixGame.new),
     ),
   );
+  if (Platform.isMacOS) {
+    runApp(
+      Focus(
+        onKey: (FocusNode node, RawKeyEvent event) => KeyEventResult.handled,
+        child: game,
+      ),
+    );
+  } else {
+    runApp(game);
+  }
 }
 
 class QixGame extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection {

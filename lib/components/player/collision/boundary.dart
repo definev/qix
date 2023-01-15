@@ -28,6 +28,8 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
     }) {
       if (alignment == desireAlignment) {
         if (self.direction == firstPreventDirection || self.direction == secondPreventDirection) {
+          print(
+              'ALIGN : $alignment | $firstPreventDirection | $secondPreventDirection | DIRECTION : ${self.direction}');
           return true;
         }
       }
@@ -79,6 +81,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   @override
   void onCollisionEnd() {
     final currentPoint = self.center.clone()..round();
+    print('ACTUAL : ${self.center} currentPoint : $currentPoint');
     final onCorner = self.ancestor.isCorner(currentPoint);
     if (self.direction != null && !onCorner) {
       self.parent.addPoint(self.parent.ball.center.clone());
