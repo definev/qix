@@ -4,44 +4,32 @@ import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qix/components/background/boundary.dart';
-import 'package:qix/components/player/ball_line.dart';
-import 'package:qix/components/player/collision/boundary.dart';
+import 'package:qix/components/player/collisions/ball.dart';
+import 'package:qix/components/player/components/ball_line.dart';
+import 'package:qix/components/player/managers/ball_manager.dart';
+import 'package:qix/components/utils/collision_between.dart';
+import 'package:qix/components/utils/has_manager.dart';
 import 'package:qix/main.dart';
 
-enum BallPosition { playground, boundary, corner }
-
-class Ball extends CircleComponent
+class Ball extends PositionComponent
     with //
         HasGameReference<QixGame>,
         HasAncestor<Boundary>,
         ParentIsA<BallLine>,
         KeyboardHandler,
-        CollisionCallbacks {
-  Ball({
-    super.radius = 8,
-    super.position,
-  });
+        CollisionCallbacks,
+        CollisionHandler<Ball>,
+        HasManager<BallManager> {
+  Ball({super.position});
 
-  AxisDirection? _direction;
-  AxisDirection? get direction => _direction;
-
-  void stop([String? from]) {
-    if (from != null) debugPrint('STOP FROM : $from');
-    _direction = null;
-  }
-
-  BallPosition ballPosition = BallPosition.boundary;
-  late CircleHitbox cue;
-
-  late final BallNBoundaryColision _boundaryCollision;
-
+  final BallManager _manager = BallManager();
   @override
-  Paint get paint => Paint()..color = Colors.red;
+  BallManager get manager => _manager;
 
-  @override
-  Future<void> onLoad() async {
-    await super.onLoad();
-    add(cue = CircleHitbox(
+  void loadAnchorPoint() {
+    super.size = Vector2.all(16);
+
+    add(CircleHitbox(
       radius: 1,
       position: center,
       isSolid: true,
@@ -50,9 +38,18 @@ class Ball extends CircleComponent
   }
 
   @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    loadAnchorPoint();
+  }
+
+  @override
   void onMount() {
     super.onMount();
-    _boundaryCollision = BallNBoundaryColision(this, ancestor);
+    mountColliables({
+      BallLine: BallNBallLineCollision(this, parent),
+      Boundary: BallNBoundaryColision(this, ancestor),
+    });
   }
 
   @override
@@ -77,7 +74,7 @@ class Ball extends CircleComponent
   void update(double dt) {
     final dist = 60 * dt;
 
-    switch (_direction) {
+    switch (manager.direction) {
       case null:
         break;
       case AxisDirection.up:
@@ -102,18 +99,18 @@ class Ball extends CircleComponent
     required AxisDirection to,
   }) {
     if (key == expected) {
-      if (_direction == cancelAt) {
-        stop('cancel key');
+      if (manager.direction == cancelAt) {
+        manager.stop('cancel key');
         return;
       }
-      _direction = to;
+      manager.direction = to;
       final wall = ancestor.onWall(center);
       final corner = ancestor.onCorner(center);
-      if (wall == null) ballPosition = BallPosition.playground;
+      if (wall == null) manager.ballPosition = BallPosition.playground;
 
       if (wall == to) {
-        stop('onWall');
-        ballPosition = BallPosition.boundary;
+        manager.stop('onWall');
+        manager.ballPosition = BallPosition.boundary;
       }
 
       _stopIfOutsideCorner(
@@ -150,9 +147,9 @@ class Ball extends CircleComponent
     required AxisDirection secondPreventDirection,
   }) {
     if (corner == desireCorner) {
-      if (_direction == firstPreventDirection || _direction == firstPreventDirection) {
-        stop('on corner');
-        ballPosition = BallPosition.boundary;
+      if (manager.direction == firstPreventDirection || manager.direction == firstPreventDirection) {
+        manager.stop('on corner');
+        manager.ballPosition = BallPosition.boundary;
       }
     }
   }
@@ -162,7 +159,7 @@ class Ball extends CircleComponent
     if (event.repeat) return true;
     if (keysPressed.length == 1) {
       final key = keysPressed.first;
-      final prevDirection = _direction;
+      final prevDirection = manager.direction;
 
       _handleMovementKey(
         key,
@@ -189,35 +186,11 @@ class Ball extends CircleComponent
         to: AxisDirection.up,
       );
 
-      if (prevDirection != _direction && !collidingWith(ancestor)) {
+      if (prevDirection != manager.direction && !collidingWith(ancestor)) {
         parent.addPoint(center.clone());
       }
     }
 
     return true;
-  }
-
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-    if (other is Boundary) {
-      _boundaryCollision.onCollision(intersectionPoints);
-    }
-  }
-
-  @override
-  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollisionStart(intersectionPoints, other);
-    if (other is Boundary) {
-      _boundaryCollision.onCollisionStart(intersectionPoints);
-    }
-  }
-
-  @override
-  void onCollisionEnd(PositionComponent other) {
-    super.onCollisionEnd(other);
-    if (other is Boundary) {
-      _boundaryCollision.onCollisionEnd();
-    }
   }
 }

@@ -1,12 +1,16 @@
 import 'package:flame/extensions.dart';
-import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
-import 'package:qix/components/player/ball.dart';
+import 'package:qix/components/player/components/ball.dart';
+import 'package:qix/components/player/components/ball_line.dart';
+import 'package:qix/components/player/managers/ball_manager.dart';
 import 'package:qix/components/utils/collision_between.dart';
 import 'package:qix/components/utils/polygon.dart';
 
 class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   BallNBoundaryColision(super.self, super.collided);
+
+  BallManager get manager => self.manager;
 
   Vector2? _findClosestCorner(Vector2 start, Vector2 end) {
     final potentialCornerOne = Vector2(start.x, end.y);
@@ -40,9 +44,9 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
       required AxisDirection secondPreventDirection,
     }) {
       if (alignment == desireAlignment) {
-        if (self.direction == firstPreventDirection || self.direction == secondPreventDirection) {
+        if (manager.direction == firstPreventDirection || manager.direction == secondPreventDirection) {
           print(
-              'ALIGN : $alignment | $firstPreventDirection | $secondPreventDirection | DIRECTION : ${self.direction}');
+              'ALIGN : $alignment | $firstPreventDirection | $secondPreventDirection | DIRECTION : ${manager.direction}');
           return true;
         }
       }
@@ -50,7 +54,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
     }
 
     if (corner != null) {
-      if (self.ballPosition != BallPosition.corner) self.center = corner;
+      if (manager.ballPosition != BallPosition.corner) self.center = corner;
 
       final alignment = collided.onCorner(self.center)!;
       preventOutOfCorner = checkPreventOutOfCorner(
@@ -78,16 +82,16 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
             secondPreventDirection: AxisDirection.down,
           );
 
-      if (self.ballPosition != BallPosition.corner) self.ballPosition = BallPosition.corner;
+      if (manager.ballPosition != BallPosition.corner) manager.ballPosition = BallPosition.corner;
     } else {
-      if (self.ballPosition == BallPosition.corner) {
-        self.ballPosition = BallPosition.boundary;
+      if (manager.ballPosition == BallPosition.corner) {
+        manager.ballPosition = BallPosition.boundary;
       }
     }
 
-    if (self.ballPosition == BallPosition.playground || preventOutOfCorner) {
-      self.stop('boundary');
-      self.ballPosition = BallPosition.boundary;
+    if (manager.ballPosition == BallPosition.playground || preventOutOfCorner) {
+      manager.stop('boundary');
+      manager.ballPosition = BallPosition.boundary;
     }
   }
 
@@ -95,7 +99,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   void onCollisionEnd() {
     final currentPoint = self.center.clone()..round();
     final onCorner = self.ancestor.isCorner(currentPoint);
-    final direction = self.direction;
+    final direction = manager.direction;
     if (direction != null && !onCorner) {
       final point = self.center.clone();
       switch (direction) {
@@ -112,7 +116,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
           point.x = point.x.floorToDouble() - 1;
           break;
       }
-      print('INITAL POINT : $point');
+      debugPrint('INITAL POINT : $point');
       self.parent.addPoint(point);
     }
   }
@@ -124,14 +128,14 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
     final center = self.center.clone();
     final start = ballLine.points.first;
     final end = Vector2(
-      self.direction == AxisDirection.left
+      manager.direction == AxisDirection.left
           ? center.x.floorToDouble()
-          : self.direction == AxisDirection.right
+          : manager.direction == AxisDirection.right
               ? center.x.ceilToDouble()
               : center.x,
-      self.direction == AxisDirection.up
+      manager.direction == AxisDirection.up
           ? center.y.floorToDouble()
-          : self.direction == AxisDirection.down
+          : manager.direction == AxisDirection.down
               ? center.y.ceilToDouble()
               : center.y,
     );
@@ -191,4 +195,23 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   bool isVertical(Vector2 start, Vector2 end) =>
       (start.x == collided.topLeft.x && end.x == collided.topRight.x) ||
       (end.x == collided.topLeft.x && start.x == collided.topRight.x);
+}
+
+class BallNBallLineCollision extends CollisionBetween<Ball, BallLine> {
+  BallNBallLineCollision(super.self, super.collided);
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints) {
+    // TODO: implement onCollision
+  }
+
+  @override
+  void onCollisionEnd() {
+    // TODO: implement onCollisionEnd
+  }
+
+  @override
+  void onCollisionStart(Set<Vector2> intersectionPoints) {
+    // TODO: implement onCollisionStart
+  }
 }

@@ -7,14 +7,17 @@ import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/background/filled_area.dart';
-import 'package:qix/components/player/ball.dart';
+import 'package:qix/components/player/collisions/ball_line.dart';
+import 'package:qix/components/player/components/ball.dart';
+import 'package:qix/components/utils/collision_between.dart';
 
 class BallLine extends ShapeComponent //
     with
         HasGameReference,
         ParentIsA<FilledArea>,
         HasAncestor<Boundary>,
-        CollisionCallbacks {
+        CollisionCallbacks,
+        ExactCollisionHandler<BallLine> {
   BallLine({super.children});
 
   late List<Vector2> points = [];
@@ -101,7 +104,6 @@ class BallLine extends ShapeComponent //
   }
 
   @override
-  // TODO: implement paint
   Paint get paint => Paint()
     ..color = Colors.white
     ..strokeWidth = 2;
@@ -116,7 +118,10 @@ class BallLine extends ShapeComponent //
   void onMount() {
     super.onMount();
     ball.center = (ancestor.bottomLeft + ancestor.bottomRight) / 2;
-    print('INITIAL BALL : ${ancestor.bottomLeft} | ${ancestor.bottomRight} : ${ball.center}');
+    debugPrint('INITIAL BALL : ${ancestor.bottomLeft} | ${ancestor.bottomRight} : ${ball.center}');
+    mountExactColliables({
+      ball: BallLineNBallCollision(this, ball),
+    });
   }
 
   @override
@@ -130,21 +135,7 @@ class BallLine extends ShapeComponent //
     if (points.isNotEmpty) allPoints.add(ball.center.toOffset());
     if (allPoints.isEmpty) return;
 
-    canvas.drawPoints(
-      PointMode.polygon,
-      allPoints,
-      paint,
-    );
-  }
-
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-    if (other == ball) {
-      if (!ball.collidingWith(ancestor)) {
-        ball.stop();
-      }
-    }
+    canvas.drawPoints(PointMode.polygon, allPoints, paint);
   }
 
   void resetLine() {
