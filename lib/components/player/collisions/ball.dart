@@ -1,4 +1,5 @@
 import 'package:flame/extensions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/player/components/ball.dart';
@@ -11,6 +12,11 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   BallNBoundaryColision(super.self, super.collided);
 
   BallManager get manager => self.manager;
+
+  Vector2 get _currentPoint => Vector2(
+        clampDouble(self.center.x, collided.topLeft.x, collided.topRight.x),
+        clampDouble(self.center.y, collided.topLeft.y, collided.bottomLeft.y),
+      );
 
   Vector2? _findClosestCorner(Vector2 start, Vector2 end) {
     final potentialCornerOne = Vector2(start.x, end.y);
@@ -97,27 +103,33 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
 
   @override
   void onCollisionEnd() {
-    final currentPoint = self.center.clone()..round();
+    final currentPoint = _currentPoint;
+
     final onCorner = self.ancestor.isCorner(currentPoint);
+    if (onCorner == true) {
+      manager.stop('on corner');
+      self.center = currentPoint;
+    }
     final direction = manager.direction;
     if (direction != null && !onCorner) {
-      final point = self.center.clone();
-      switch (direction) {
+      switch (manager.direction) {
         case AxisDirection.down:
-          point.y = point.y.floorToDouble() - 1;
+          currentPoint.y = collided.topLeft.y;
           break;
         case AxisDirection.up:
-          point.y = point.y.ceilToDouble() + 1;
+          currentPoint.y = collided.bottomLeft.y;
           break;
         case AxisDirection.left:
-          point.x = point.x.ceilToDouble() + 1;
+          currentPoint.x = collided.topRight.x;
           break;
         case AxisDirection.right:
-          point.x = point.x.floorToDouble() - 1;
+          currentPoint.x = collided.topLeft.x;
           break;
+        default:
       }
-      debugPrint('INITAL POINT : $point');
-      self.parent.addPoint(point);
+
+      debugPrint('INITAL POINT : $currentPoint');
+      self.parent.addPoint(currentPoint);
     }
   }
 
@@ -125,18 +137,18 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   void onCollisionStart(Set<Vector2> intersectionPoints) {
     final ballLine = self.parent;
     if (ballLine.points.isEmpty) return;
-    final center = self.center.clone();
+    final center = _currentPoint;
     final start = ballLine.points.first;
     final end = Vector2(
       manager.direction == AxisDirection.left
-          ? center.x.floorToDouble()
+          ? collided.topLeft.x
           : manager.direction == AxisDirection.right
-              ? center.x.ceilToDouble()
+              ? collided.topRight.x
               : center.x,
       manager.direction == AxisDirection.up
-          ? center.y.floorToDouble()
+          ? collided.topLeft.y
           : manager.direction == AxisDirection.down
-              ? center.y.ceilToDouble()
+              ? collided.bottomLeft.y
               : center.y,
     );
     final points = [...ballLine.points, end];
@@ -148,18 +160,18 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
       final corner = _findClosestCorner(start, end);
       if (corner != null) {
         filledArea.addArea(points..add(corner));
-      } else {
+      } else { 
         // Calculate filled area and decide which are we will choose (the smaller one)
         if (isVertical(start, end)) {
           final polygonTop = [
-            if (start.x > end.x) collided.topLeft else collided.topRight,
-            ...points,
             if (start.x > end.x) collided.topRight else collided.topLeft,
+            ...points,
+            if (start.x > end.x) collided.topLeft else collided.topRight,
           ];
           final polygonBottom = [
-            if (start.x > end.x) collided.bottomLeft else collided.bottomRight,
-            ...points,
             if (start.x > end.x) collided.bottomRight else collided.bottomLeft,
+            ...points,
+            if (start.x > end.x) collided.bottomLeft else collided.bottomRight,
           ];
           if (PolygonUtils.calculateArea(polygonTop) > PolygonUtils.calculateArea(polygonBottom)) {
             filledArea.addArea(polygonBottom);

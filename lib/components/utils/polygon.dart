@@ -6,7 +6,7 @@ class PolygonUtils {
     for (int i = 0; i < polygonVertices.length - 1; i++) {
       Vector2 v1 = polygonVertices[i];
       Vector2 v2 = polygonVertices[i + 1];
-      area += v1.cross(v2).abs();
+      area += v1.cross(v2);
     }
     area = area.abs() / 2;
     return area;

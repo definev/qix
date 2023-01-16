@@ -4,6 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
+import 'package:qix/components/utils/debug_color.dart';
 import 'package:qix/components/utils/line_hit_box.dart';
 
 class Boundary extends PositionComponent with HasGameReference, HasPaint {
@@ -48,7 +49,7 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   @override
   Paint get paint => Paint()
     ..color = Colors.white
-    ..strokeWidth = 0
+    ..strokeWidth = 1
     ..strokeCap = StrokeCap.round;
 
   void createWall() {
@@ -75,7 +76,10 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
   @override
   Future<void>? onLoad() async {
     createWall();
-    add(PolygonHitbox([topLeft, topRight, bottomRight, bottomLeft], isSolid: false));
+    add(PolygonHitbox(
+      [topLeft, topRight, bottomRight, bottomLeft],
+      isSolid: false,
+    )..debugColor = DebugColors.boundary);
   }
 
   @override

@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:qix/components/utils/debug_color.dart';
+import 'package:qix/components/utils/line_hit_box.dart';
 
 class FilledArea extends PositionComponent {
   FilledArea({super.children});
@@ -13,10 +15,21 @@ class FilledArea extends PositionComponent {
   List<Color> colors = [];
   final rand = Random();
 
+  final List<LineHitBox> _hitBoxes = [];
+
   void addArea(List<Vector2> area) {
     colors.add(Color.fromRGBO(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255), 1));
     _areas.add(area);
     _rawAreas.add(area.map((p) => p.toOffset()).toList());
+
+    for (var i = 0; i < area.length - 1; i++) {
+      final hitBox = LineHitBox.create(
+        from: area[i],
+        to: area[i + 1],
+      )..debugColor = DebugColors.filledArea;
+      _hitBoxes.add(hitBox);
+      add(hitBox);
+    }
   }
 
   @override
@@ -43,7 +56,7 @@ class FilledArea extends PositionComponent {
       rawArea,
       Paint()
         ..color = Colors.white
-        ..strokeWidth = 0,
+        ..strokeWidth = 1,
     );
   }
 }

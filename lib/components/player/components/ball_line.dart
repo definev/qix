@@ -10,6 +10,7 @@ import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/collisions/ball_line.dart';
 import 'package:qix/components/player/components/ball.dart';
 import 'package:qix/components/utils/collision_between.dart';
+import 'package:qix/components/utils/debug_color.dart';
 
 class BallLine extends ShapeComponent //
     with
@@ -25,7 +26,7 @@ class BallLine extends ShapeComponent //
   late final ball = Ball();
 
   List<RectangleHitbox> _hitBoxes = [];
-  final _latestLine = RectangleHitbox();
+  var _latestLine = RectangleHitbox()..debugColor = DebugColors.ballLine;
 
   Paint linePaint = Paint()
     ..strokeWidth = 3
@@ -40,7 +41,7 @@ class BallLine extends ShapeComponent //
       final prevPoint = points[points.length - 2];
       final hitbox = await createRectangleFromPoint(prevPoint, point);
       if (hitbox == null) return;
-      _hitBoxes.add(hitbox);
+      _hitBoxes.add(hitbox..debugColor = DebugColors.ballLine);
       add(hitbox);
     }
   }
@@ -106,7 +107,7 @@ class BallLine extends ShapeComponent //
   @override
   Paint get paint => Paint()
     ..color = Colors.white
-    ..strokeWidth = 2;
+    ..strokeWidth = 1;
 
   @override
   Future<void>? onLoad() async {
@@ -139,6 +140,12 @@ class BallLine extends ShapeComponent //
   }
 
   void resetLine() {
+    for (var hitBox in _hitBoxes) {
+      remove(hitBox);
+    }
+    remove(_latestLine);
+    _latestLine = RectangleHitbox()..debugColor = DebugColors.ballLine;
+    add(_latestLine);
     _hitBoxes = [];
     points = [];
     _rawPoints = [];

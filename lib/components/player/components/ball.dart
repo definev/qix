@@ -8,6 +8,7 @@ import 'package:qix/components/player/collisions/ball.dart';
 import 'package:qix/components/player/components/ball_line.dart';
 import 'package:qix/components/player/managers/ball_manager.dart';
 import 'package:qix/components/utils/collision_between.dart';
+import 'package:qix/components/utils/debug_color.dart';
 import 'package:qix/components/utils/has_manager.dart';
 import 'package:qix/main.dart';
 
@@ -34,7 +35,7 @@ class Ball extends PositionComponent
       position: center,
       isSolid: true,
       anchor: Anchor.center,
-    )..debugColor = Colors.cyan);
+    )..debugColor = DebugColors.ballLine);
   }
 
   @override
@@ -72,7 +73,7 @@ class Ball extends PositionComponent
 
   @override
   void update(double dt) {
-    final dist = 60 * dt;
+    final dist = 200 * dt;
 
     switch (manager.direction) {
       case null:
