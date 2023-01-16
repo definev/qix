@@ -43,7 +43,7 @@ class FilledArea extends PositionComponent {
       rawArea,
       Paint()
         ..color = Colors.white
-        ..strokeWidth = 2,
+        ..strokeWidth = 0,
     );
   }
 }

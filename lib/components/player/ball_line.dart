@@ -116,6 +116,7 @@ class BallLine extends ShapeComponent //
   void onMount() {
     super.onMount();
     ball.center = (ancestor.bottomLeft + ancestor.bottomRight) / 2;
+    print('INITIAL BALL : ${ancestor.bottomLeft} | ${ancestor.bottomRight} : ${ball.center}');
   }
 
   @override

@@ -76,7 +76,6 @@ class Ball extends CircleComponent
   @override
   void update(double dt) {
     final dist = 60 * dt;
-    print(center);
 
     switch (_direction) {
       case null:
