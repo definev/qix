@@ -13,10 +13,13 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
 
   BallManager get manager => self.manager;
 
-  Vector2 get _currentPoint => Vector2(
-        clampDouble(self.center.x, collided.topLeft.x, collided.topRight.x),
-        clampDouble(self.center.y, collided.topLeft.y, collided.bottomLeft.y),
-      );
+  Vector2 get _currentPoint {
+    final point = Vector2(
+      clampDouble(self.center.x, collided.topLeft.x, collided.topRight.x),
+      clampDouble(self.center.y, collided.topLeft.y, collided.bottomLeft.y),
+    );
+    return point;
+  }
 
   Vector2? _findClosestCorner(Vector2 start, Vector2 end) {
     final potentialCornerOne = Vector2(start.x, end.y);
@@ -137,30 +140,34 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   void onCollisionStart(Set<Vector2> intersectionPoints) {
     final ballLine = self.parent;
     if (ballLine.points.isEmpty) return;
+
+    final direction = self.manager.direction;
+
     final center = _currentPoint;
     final start = ballLine.points.first;
     final end = Vector2(
-      manager.direction == AxisDirection.left
+      direction == AxisDirection.left
           ? collided.topLeft.x
-          : manager.direction == AxisDirection.right
+          : direction == AxisDirection.right
               ? collided.topRight.x
               : center.x,
-      manager.direction == AxisDirection.up
+      direction == AxisDirection.up
           ? collided.topLeft.y
-          : manager.direction == AxisDirection.down
+          : direction == AxisDirection.down
               ? collided.bottomLeft.y
               : center.y,
     );
     final points = [...ballLine.points, end];
     final filledArea = ballLine.parent;
 
-    if (start.x == end.x || start.y == end.y) {
+    if ((start.x == end.x && (start.x == collided.topLeft.x || start.x == collided.topRight.x)) ||
+        start.y == end.y && (start.y == collided.topLeft.y || start.x == collided.bottomLeft.y)) {
       filledArea.addArea(points);
     } else {
       final corner = _findClosestCorner(start, end);
       if (corner != null) {
         filledArea.addArea(points..add(corner));
-      } else { 
+      } else {
         // Calculate filled area and decide which are we will choose (the smaller one)
         if (isVertical(start, end)) {
           final polygonTop = [
@@ -173,7 +180,9 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
             ...points,
             if (start.x > end.x) collided.bottomLeft else collided.bottomRight,
           ];
-          if (PolygonUtils.calculateArea(polygonTop) > PolygonUtils.calculateArea(polygonBottom)) {
+          final topArea = PolygonUtils.calculateArea(polygonTop);
+          final bottomArea = PolygonUtils.calculateArea(polygonBottom);
+          if (topArea > bottomArea) {
             filledArea.addArea(polygonBottom);
           } else {
             filledArea.addArea(polygonTop);
@@ -202,6 +211,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
     }
 
     ballLine.resetLine();
+    manager.stop();
   }
 
   bool isVertical(Vector2 start, Vector2 end) =>
