@@ -108,7 +108,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
   void onCollisionEnd() {
     final currentPoint = _currentPoint;
 
-    final onCorner = self.ancestor.isCorner(currentPoint);
+    final onCorner = self.ancestor.parent.isCorner(currentPoint);
     if (onCorner == true) {
       manager.stop('on corner');
       self.center = currentPoint;

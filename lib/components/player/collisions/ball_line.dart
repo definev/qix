@@ -54,7 +54,7 @@ class RunnerLine extends Component {
   );
 
   var progress = 0.0;
-  final limit = 3.0;
+  final limit = 0.8;
 
   @override
   int get priority => -1;

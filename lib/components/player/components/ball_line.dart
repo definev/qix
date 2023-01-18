@@ -11,6 +11,7 @@ import 'package:qix/components/player/collisions/ball_line.dart';
 import 'package:qix/components/player/components/ball.dart';
 import 'package:qix/components/utils/collision_between.dart';
 import 'package:qix/components/utils/debug_color.dart';
+import 'package:qix/components/utils/line_hit_box.dart';
 
 class BallLine extends ShapeComponent //
     with
@@ -26,7 +27,8 @@ class BallLine extends ShapeComponent //
   late final ball = Ball();
 
   List<RectangleHitbox> _hitBoxes = [];
-  var _latestLine = RectangleHitbox()..debugColor = DebugColors.ballLine;
+  var _latestLine = LineHitBox.create(from: Vector2.all(0), to: Vector2.all(0)) //
+    ..debugColor = DebugColors.ballLine;
 
   Paint linePaint = Paint()
     ..strokeWidth = 3
@@ -48,7 +50,7 @@ class BallLine extends ShapeComponent //
 
   void setCurrentHitBox(Vector2 prevPoint, Vector2 point) {
     if (point.distanceToSquared(prevPoint) < 4) return;
-    const expand = 8;
+    const expand = 10;
 
     if (prevPoint.x == point.x) {
       if (prevPoint.y > point.y) {
@@ -69,40 +71,41 @@ class BallLine extends ShapeComponent //
     }
   }
 
-  Future<RectangleHitbox?> createRectangleFromPoint(Vector2 prevPoint, Vector2 point) async {
-    return await Future.delayed(const Duration(milliseconds: 100), () {
-      RectangleHitbox? hitbox;
-      if (prevPoint.x == point.x) {
-        if (prevPoint.y > point.y) {
-          hitbox = RectangleHitbox(
-            position: point,
-            size: Vector2(1, prevPoint.y - point.y),
-          );
-        } else {
-          hitbox = RectangleHitbox(
-            position: prevPoint,
-            size: Vector2(1, point.y - prevPoint.y),
-          );
-        }
-      }
+  Future<RectangleHitbox?> createRectangleFromPoint(Vector2 prevPoint, Vector2 point) async => await Future.delayed(
+        const Duration(milliseconds: 100),
+        () {
+          RectangleHitbox? hitbox;
+          if (prevPoint.x == point.x) {
+            if (prevPoint.y > point.y) {
+              hitbox = RectangleHitbox(
+                position: point,
+                size: Vector2(1, prevPoint.y - point.y),
+              );
+            } else {
+              hitbox = RectangleHitbox(
+                position: prevPoint,
+                size: Vector2(1, point.y - prevPoint.y),
+              );
+            }
+          }
 
-      if (prevPoint.y == point.y) {
-        if (prevPoint.x > point.x) {
-          hitbox = RectangleHitbox(
-            position: point,
-            size: Vector2(prevPoint.x - point.x, 1),
-          );
-        } else {
-          hitbox = RectangleHitbox(
-            position: prevPoint,
-            size: Vector2(point.x - prevPoint.x, 1),
-          );
-        }
-      }
+          if (prevPoint.y == point.y) {
+            if (prevPoint.x > point.x) {
+              hitbox = RectangleHitbox(
+                position: point,
+                size: Vector2(prevPoint.x - point.x, 1),
+              );
+            } else {
+              hitbox = RectangleHitbox(
+                position: prevPoint,
+                size: Vector2(point.x - prevPoint.x, 1),
+              );
+            }
+          }
 
-      return hitbox;
-    });
-  }
+          return hitbox;
+        },
+      );
 
   @override
   Paint get paint => Paint()
@@ -119,7 +122,6 @@ class BallLine extends ShapeComponent //
   void onMount() {
     super.onMount();
     ball.center = (ancestor.bottomLeft + ancestor.bottomRight) / 2;
-    debugPrint('INITIAL BALL : ${ancestor.bottomLeft} | ${ancestor.bottomRight} : ${ball.center}');
     mountExactColliables({
       ball: BallLineNBallCollision(this, ball),
     });
@@ -144,7 +146,8 @@ class BallLine extends ShapeComponent //
       remove(hitBox);
     }
     remove(_latestLine);
-    _latestLine = RectangleHitbox()..debugColor = DebugColors.ballLine;
+    _latestLine = LineHitBox.create(from: Vector2.all(0), to: Vector2.all(0)) //
+      ..debugColor = DebugColors.ballLine;
     add(_latestLine);
     _hitBoxes = [];
     points = [];

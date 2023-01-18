@@ -4,10 +4,11 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/utils/debug_color.dart';
 import 'package:qix/components/utils/line_hit_box.dart';
 
-class FilledArea extends PositionComponent {
+class FilledArea extends PositionComponent with ParentIsA<Boundary> {
   FilledArea({super.children});
 
   final List<List<Vector2>> _areas = [];

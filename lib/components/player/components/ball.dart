@@ -4,7 +4,9 @@ import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qix/components/background/boundary.dart';
+import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/collisions/ball.dart';
+import 'package:qix/components/player/collisions/filled_area.dart';
 import 'package:qix/components/player/components/ball_line.dart';
 import 'package:qix/components/player/managers/ball_manager.dart';
 import 'package:qix/components/utils/collision_between.dart';
@@ -15,7 +17,7 @@ import 'package:qix/main.dart';
 class Ball extends PositionComponent
     with //
         HasGameReference<QixGame>,
-        HasAncestor<Boundary>,
+        HasAncestor<FilledArea>,
         ParentIsA<BallLine>,
         KeyboardHandler,
         CollisionCallbacks,
@@ -31,11 +33,11 @@ class Ball extends PositionComponent
     super.size = Vector2.all(16);
 
     add(CircleHitbox(
-      radius: 1,
+      radius: 3,
       position: center,
       isSolid: true,
       anchor: Anchor.center,
-    )..debugColor = DebugColors.ballLine);
+    )..debugColor = DebugColors.ball);
   }
 
   @override
@@ -49,7 +51,8 @@ class Ball extends PositionComponent
     super.onMount();
     mountColliables({
       BallLine: BallNBallLineCollision(this, parent),
-      Boundary: BallNBoundaryColision(this, ancestor),
+      Boundary: BallNBoundaryColision(this, ancestor.parent),
+      FilledArea: BallNFilledAreaCollision(this, ancestor),
     });
   }
 
@@ -105,8 +108,8 @@ class Ball extends PositionComponent
       return;
     }
     manager.direction = to;
-    final wall = ancestor.onWall(center);
-    final corner = ancestor.onCorner(center);
+    final wall = ancestor.parent.onWall(center);
+    final corner = ancestor.parent.onCorner(center);
     if (wall == null) manager.ballPosition = BallPosition.playground;
 
     if (wall == to) {
@@ -160,6 +163,9 @@ class Ball extends PositionComponent
     if (keysPressed.length == 1) {
       final key = keysPressed.first;
       final prevDirection = manager.direction;
+      if (key == LogicalKeyboardKey.space) {
+        manager.stop('PAUSE');
+      }
 
       _handleMovementKey(
         key,
@@ -186,7 +192,7 @@ class Ball extends PositionComponent
         to: AxisDirection.up,
       );
 
-      if (prevDirection != manager.direction && !collidingWith(ancestor)) {
+      if (prevDirection != manager.direction && !collidingWith(ancestor) && parent.points.isNotEmpty) {
         parent.addPoint(center.clone());
       }
     }
