@@ -161,7 +161,7 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
     final filledArea = ballLine.parent;
 
     if ((start.x == end.x && (start.x == collided.topLeft.x || start.x == collided.topRight.x)) ||
-        start.y == end.y && (start.y == collided.topLeft.y || start.x == collided.bottomLeft.y)) {
+        start.y == end.y && (start.y == collided.topLeft.y || start.y == collided.bottomLeft.y)) {
       filledArea.addArea(points);
     } else {
       final corner = _findClosestCorner(start, end);

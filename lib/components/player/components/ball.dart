@@ -99,46 +99,45 @@ class Ball extends PositionComponent
     required AxisDirection cancelAt,
     required AxisDirection to,
   }) {
-    if (key == expected) {
-      if (manager.direction == cancelAt) {
-        manager.stop('cancel key');
-        return;
-      }
-      manager.direction = to;
-      final wall = ancestor.onWall(center);
-      final corner = ancestor.onCorner(center);
-      if (wall == null) manager.ballPosition = BallPosition.playground;
-
-      if (wall == to) {
-        manager.stop('onWall');
-        manager.ballPosition = BallPosition.boundary;
-      }
-
-      _stopIfOutsideCorner(
-        corner,
-        Alignment.topLeft,
-        firstPreventDirection: AxisDirection.up,
-        secondPreventDirection: AxisDirection.left,
-      );
-      _stopIfOutsideCorner(
-        corner,
-        Alignment.topRight,
-        firstPreventDirection: AxisDirection.up,
-        secondPreventDirection: AxisDirection.right,
-      );
-      _stopIfOutsideCorner(
-        corner,
-        Alignment.bottomLeft,
-        firstPreventDirection: AxisDirection.down,
-        secondPreventDirection: AxisDirection.left,
-      );
-      _stopIfOutsideCorner(
-        corner,
-        Alignment.bottomRight,
-        firstPreventDirection: AxisDirection.down,
-        secondPreventDirection: AxisDirection.right,
-      );
+    if (key != expected) return;
+    if (manager.direction == cancelAt) {
+      manager.stop('cancel key');
+      return;
     }
+    manager.direction = to;
+    final wall = ancestor.onWall(center);
+    final corner = ancestor.onCorner(center);
+    if (wall == null) manager.ballPosition = BallPosition.playground;
+
+    if (wall == to) {
+      manager.stop('onWall');
+      manager.ballPosition = BallPosition.boundary;
+    }
+
+    _stopIfOutsideCorner(
+      corner,
+      Alignment.topLeft,
+      firstPreventDirection: AxisDirection.up,
+      secondPreventDirection: AxisDirection.left,
+    );
+    _stopIfOutsideCorner(
+      corner,
+      Alignment.topRight,
+      firstPreventDirection: AxisDirection.up,
+      secondPreventDirection: AxisDirection.right,
+    );
+    _stopIfOutsideCorner(
+      corner,
+      Alignment.bottomLeft,
+      firstPreventDirection: AxisDirection.down,
+      secondPreventDirection: AxisDirection.left,
+    );
+    _stopIfOutsideCorner(
+      corner,
+      Alignment.bottomRight,
+      firstPreventDirection: AxisDirection.down,
+      secondPreventDirection: AxisDirection.right,
+    );
   }
 
   void _stopIfOutsideCorner(
