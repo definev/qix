@@ -30,12 +30,6 @@ class BallLine extends ShapeComponent //
   var _latestLine = LineHitBox.create(from: Vector2.all(0), to: Vector2.all(0)) //
     ..debugColor = DebugColors.ballLine;
 
-  Paint linePaint = Paint()
-    ..strokeWidth = 3
-    ..color = Colors.white
-    ..style = PaintingStyle.stroke
-    ..strokeCap = StrokeCap.round;
-
   void addPoint(Vector2 point) async {
     points.add(point);
     _rawPoints.add(point.toOffset());
@@ -50,7 +44,7 @@ class BallLine extends ShapeComponent //
 
   void setCurrentHitBox(Vector2 prevPoint, Vector2 point) {
     if (point.distanceToSquared(prevPoint) < 4) return;
-    const expand = 10;
+    const expand = 15;
 
     if (prevPoint.x == point.x) {
       if (prevPoint.y > point.y) {

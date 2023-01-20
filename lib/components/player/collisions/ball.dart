@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/player/components/ball.dart';
-import 'package:qix/components/player/components/ball_line.dart';
 import 'package:qix/components/player/managers/ball_manager.dart';
 import 'package:qix/components/utils/collision_between.dart';
 import 'package:qix/components/utils/polygon.dart';
@@ -219,21 +218,3 @@ class BallNBoundaryColision extends CollisionBetween<Ball, Boundary> {
       (end.x == collided.topLeft.x && start.x == collided.topRight.x);
 }
 
-class BallNBallLineCollision extends CollisionBetween<Ball, BallLine> {
-  BallNBallLineCollision(super.self, super.collided);
-
-  @override
-  void onCollision(Set<Vector2> intersectionPoints) {
-    // TODO: implement onCollision
-  }
-
-  @override
-  void onCollisionEnd() {
-    // TODO: implement onCollisionEnd
-  }
-
-  @override
-  void onCollisionStart(Set<Vector2> intersectionPoints) {
-    // TODO: implement onCollisionStart
-  }
-}

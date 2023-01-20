@@ -14,6 +14,7 @@ class BallLineNBallCollision extends CollisionBetween<BallLine, Ball> {
   @override
   void onCollisionStart(Set<Vector2> intersectionPoints) {
     if (!collided.collidingWith(self.ancestor)) {
+      if (collided.manager.direction == null) return;
       collided.manager.stop('ball line');
       final first = self.points.first.clone();
       final points = [...self.points, intersectionPoints.first];
@@ -108,8 +109,8 @@ class RunnerLine extends Component {
       PointMode.polygon,
       linePoints.map((e) => e.toOffset()).toList(),
       Paint()
-        ..color = Colors.amber.shade100
-        ..strokeWidth = 0
+        ..color = Colors.white
+        ..strokeWidth = 1
         ..strokeCap = StrokeCap.round,
     );
   }

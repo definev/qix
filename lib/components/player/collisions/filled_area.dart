@@ -8,6 +8,6 @@ class BallNFilledAreaCollision extends CollisionBetween<Ball, FilledArea> {
 
   @override
   void onCollisionStart(Set<Vector2> intersectionPoints) {
-    print('COLLIDE WITH FILLED AREA');
+    self.manager.stop('filled area');
   }
 }

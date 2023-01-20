@@ -30,10 +30,10 @@ class Ball extends PositionComponent
   BallManager get manager => _manager;
 
   void loadAnchorPoint() {
-    super.size = Vector2.all(16);
+    super.size = Vector2.all(4);
 
     add(CircleHitbox(
-      radius: 3,
+      radius: 0.5,
       position: center,
       isSolid: true,
       anchor: Anchor.center,
@@ -50,7 +50,6 @@ class Ball extends PositionComponent
   void onMount() {
     super.onMount();
     mountColliables({
-      BallLine: BallNBallLineCollision(this, parent),
       Boundary: BallNBoundaryColision(this, ancestor.parent),
       FilledArea: BallNFilledAreaCollision(this, ancestor),
     });
@@ -102,8 +101,10 @@ class Ball extends PositionComponent
     required AxisDirection cancelAt,
     required AxisDirection to,
   }) {
+    final prevDirection = manager.direction;
+  
     if (key != expected) return;
-    if (manager.direction == cancelAt) {
+    if (prevDirection == cancelAt) {
       manager.stop('cancel key');
       return;
     }
@@ -141,6 +142,11 @@ class Ball extends PositionComponent
       firstPreventDirection: AxisDirection.down,
       secondPreventDirection: AxisDirection.right,
     );
+
+
+    if (prevDirection != manager.direction && !collidingWith(ancestor) && parent.points.isNotEmpty) {
+      parent.addPoint(center.clone());
+    }
   }
 
   void _stopIfOutsideCorner(
@@ -162,7 +168,6 @@ class Ball extends PositionComponent
     if (event.repeat) return true;
     if (keysPressed.length == 1) {
       final key = keysPressed.first;
-      final prevDirection = manager.direction;
       if (key == LogicalKeyboardKey.space) {
         manager.stop('PAUSE');
       }
@@ -191,10 +196,6 @@ class Ball extends PositionComponent
         cancelAt: AxisDirection.down,
         to: AxisDirection.up,
       );
-
-      if (prevDirection != manager.direction && !collidingWith(ancestor) && parent.points.isNotEmpty) {
-        parent.addPoint(center.clone());
-      }
     }
 
     return true;
