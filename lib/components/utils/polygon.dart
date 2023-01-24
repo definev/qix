@@ -1,14 +1,14 @@
 import 'package:flame/extensions.dart';
 
 class PolygonUtils {
-  static double calculateArea(List<Vector2> polygonVertices) {
-    double area = 0.0;
-    for (int i = 1; i < polygonVertices.length - 1; i++) {
-      Vector2 v1 = polygonVertices[i] - polygonVertices[i - 1];
-      Vector2 v2 = polygonVertices[i + 1] - polygonVertices[i];
-      area += v1.cross(v2);
+  static double calculateArea(List<Vector2> vertices) {
+    int n = vertices.length;
+    double area = 0;
+    for (int i = 0; i < n; i++) {
+      int j = (i + 1) % n;
+      area += vertices[i].x * vertices[j].y;
+      area -= vertices[j].x * vertices[i].y;
     }
-    area = area.abs() / 2;
-    return area;
+    return area.abs() / 2;
   }
 }

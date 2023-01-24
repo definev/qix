@@ -1,15 +1,33 @@
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
 
 abstract class CollisionBetween<S extends PositionComponent, O extends PositionComponent> {
   final S self;
   final O collided;
 
+  bool debugMode = false;
+
   CollisionBetween(this.self, this.collided);
+
+  void _onCollision(Set<Vector2> intersectionPoints) {
+    if (debugMode) debugPrint('$S-$O: onCollision');
+    onCollision(intersectionPoints);
+  }
 
   void onCollision(Set<Vector2> intersectionPoints) {}
 
+  void _onCollisionStart(Set<Vector2> intersectionPoints) {
+    if (debugMode) debugPrint('$S-$O: onCollisionStart');
+    onCollisionStart(intersectionPoints);
+  }
+
   void onCollisionStart(Set<Vector2> intersectionPoints) {}
+
+  void _onCollisionEnd() {
+    if (debugMode) debugPrint('$S-$O: onCollisionEnd');
+    onCollisionEnd();
+  }
 
   void onCollisionEnd() {}
 }
@@ -27,7 +45,7 @@ mixin CollisionHandler<T extends PositionComponent> on CollisionCallbacks {
     final entries = collidables.entries;
     for (final collidable in entries) {
       if (other.runtimeType == collidable.key) {
-        collidable.value.onCollisionStart(intersectionPoints);
+        collidable.value._onCollisionStart(intersectionPoints);
       }
     }
   }
@@ -38,7 +56,7 @@ mixin CollisionHandler<T extends PositionComponent> on CollisionCallbacks {
     final entries = collidables.entries;
     for (final collidable in entries) {
       if (other.runtimeType == collidable.key) {
-        collidable.value.onCollision(intersectionPoints);
+        collidable.value._onCollision(intersectionPoints);
       }
     }
   }
@@ -49,7 +67,7 @@ mixin CollisionHandler<T extends PositionComponent> on CollisionCallbacks {
     final entries = collidables.entries;
     for (final collidable in entries) {
       if (other.runtimeType == collidable.key) {
-        collidable.value.onCollisionEnd();
+        collidable.value._onCollisionEnd();
       }
     }
   }

@@ -12,28 +12,33 @@ import 'package:qix/components/player/managers/ball_manager.dart';
 import 'package:qix/components/utils/collision_between.dart';
 import 'package:qix/components/utils/debug_color.dart';
 import 'package:qix/components/utils/has_manager.dart';
+import 'package:qix/components/utils/priority.dart';
 import 'package:qix/main.dart';
 
 class Ball extends PositionComponent
     with //
         HasGameReference<QixGame>,
-        HasAncestor<FilledArea>,
-        ParentIsA<BallLine>,
         KeyboardHandler,
         CollisionCallbacks,
         CollisionHandler<Ball>,
         HasManager<BallManager> {
   Ball({super.position});
 
-  final BallManager _manager = BallManager();
+  @override
+  int get priority => GamePriority.ball;
+
+  final _manager = BallManager();
   @override
   BallManager get manager => _manager;
 
-  void loadAnchorPoint() {
-    super.size = Vector2.all(4);
+  @override
+  Color get debugColor => Colors.transparent;
 
-    add(CircleHitbox(
-      radius: 0.5,
+  void loadAnchorPoint() {
+    super.size = Vector2.all(16);
+
+    add(RectangleHitbox(
+      size: Vector2.all(2),
       position: center,
       isSolid: true,
       anchor: Anchor.center,
@@ -42,7 +47,6 @@ class Ball extends PositionComponent
 
   @override
   Future<void> onLoad() async {
-    await super.onLoad();
     loadAnchorPoint();
   }
 
@@ -50,8 +54,8 @@ class Ball extends PositionComponent
   void onMount() {
     super.onMount();
     mountColliables({
-      Boundary: BallNBoundaryColision(this, ancestor.parent),
-      FilledArea: BallNFilledAreaCollision(this, ancestor),
+      Boundary: BallNBoundaryColision(this, boundary),
+      FilledArea: BallNFilledAreaCollision(this, filledArea),
     });
   }
 
@@ -102,20 +106,20 @@ class Ball extends PositionComponent
     required AxisDirection to,
   }) {
     final prevDirection = manager.direction;
-  
+
     if (key != expected) return;
     if (prevDirection == cancelAt) {
       manager.stop('cancel key');
       return;
     }
     manager.direction = to;
-    final wall = ancestor.parent.onWall(center);
-    final corner = ancestor.parent.onCorner(center);
-    if (wall == null) manager.ballPosition = BallPosition.playground;
+    final wall = boundary.onWall(center);
+    final corner = boundary.onCorner(center);
+    if (wall == null) manager.position = BallPosition.playground;
 
     if (wall == to) {
       manager.stop('onWall');
-      manager.ballPosition = BallPosition.boundary;
+      manager.position = BallPosition.boundary;
     }
 
     _stopIfOutsideCorner(
@@ -143,9 +147,8 @@ class Ball extends PositionComponent
       secondPreventDirection: AxisDirection.right,
     );
 
-
-    if (prevDirection != manager.direction && !collidingWith(ancestor) && parent.points.isNotEmpty) {
-      parent.addPoint(center.clone());
+    if (prevDirection != manager.direction && !collidingWith(filledArea) && ballLine.points.isNotEmpty) {
+      ballLine.addPoint(center.clone());
     }
   }
 
@@ -158,7 +161,7 @@ class Ball extends PositionComponent
     if (corner == desireCorner) {
       if (manager.direction == firstPreventDirection || manager.direction == firstPreventDirection) {
         manager.stop('on corner');
-        manager.ballPosition = BallPosition.boundary;
+        manager.position = BallPosition.boundary;
       }
     }
   }

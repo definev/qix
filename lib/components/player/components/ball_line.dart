@@ -6,21 +6,26 @@ import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
-import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/collisions/ball_line.dart';
 import 'package:qix/components/player/components/ball.dart';
 import 'package:qix/components/utils/collision_between.dart';
 import 'package:qix/components/utils/debug_color.dart';
+import 'package:qix/components/utils/game_utils.dart';
 import 'package:qix/components/utils/line_hit_box.dart';
+import 'package:qix/components/utils/priority.dart';
+import 'package:qix/main.dart';
 
 class BallLine extends ShapeComponent //
     with
-        HasGameReference,
-        ParentIsA<FilledArea>,
-        HasAncestor<Boundary>,
+        HasGameReference<QixGame>,
         CollisionCallbacks,
         ExactCollisionHandler<BallLine> {
   BallLine({super.children});
+
+  @override
+  int get priority => GamePriority.ballLine;
+
+  Boundary get ancestor => game.firstChild<Boundary>()!;
 
   late List<Vector2> points = [];
   late List<Offset> _rawPoints = [];
@@ -104,7 +109,8 @@ class BallLine extends ShapeComponent //
   @override
   Paint get paint => Paint()
     ..color = Colors.white
-    ..strokeWidth = 1;
+    ..strokeCap = StrokeCap.round
+    ..strokeWidth = GameUtils.thickness;
 
   @override
   Future<void>? onLoad() async {
@@ -147,4 +153,8 @@ class BallLine extends ShapeComponent //
     points = [];
     _rawPoints = [];
   }
+}
+
+extension GetBallLine on HasGameReference<QixGame> {
+  BallLine get ballLine => game.firstChild()!;
 }

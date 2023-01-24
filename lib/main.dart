@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/background/filled_area.dart';
 import 'package:qix/components/player/components/ball_line.dart';
+import 'package:qix/components/utils/game_utils.dart';
 import 'package:universal_io/io.dart';
 
 void main() {
@@ -49,8 +50,29 @@ class _QixGameWidgetState extends State<QixGameWidget> {
             ),
           );
         },
+        'thickness': (context, QixGame game) {
+          return MediaQuery(
+            data: MediaQueryData.fromWindow(WidgetsBinding.instance.window),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: SizedBox(
+                height: 48,
+                width: 100,
+                child: Material(
+                  child: Slider(
+                    value: GameUtils.thickness / 4,
+                    onChanged: (value) {
+                      GameUtils.thickness = value * 4;
+                      setState(() {});
+                    },
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       },
-      initialActiveOverlays: const ['debug'],
+      initialActiveOverlays: const ['debug', 'thickness'],
     );
   }
 }
@@ -62,14 +84,8 @@ class QixGame extends FlameGame with HasKeyboardHandlerComponents, HasCollisionD
 
   @override
   Future<void>? onLoad() async {
-    add(Boundary(
-      children: [
-        FilledArea(
-          children: [
-            BallLine(),
-          ],
-        ),
-      ],
-    ));
+    add(Boundary());
+    add(FilledArea());
+    add(BallLine());
   }
 }

@@ -5,12 +5,18 @@ import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/utils/debug_color.dart';
+import 'package:qix/components/utils/game_utils.dart';
 import 'package:qix/components/utils/line_hit_box.dart';
+import 'package:qix/components/utils/priority.dart';
+import 'package:qix/main.dart';
 
 class Boundary extends PositionComponent with HasGameReference, HasPaint {
   Boundary({super.children});
 
-  EdgeInsets insets = const EdgeInsets.all(50);
+  @override
+  int get priority => GamePriority.boundrary;
+
+  EdgeInsets insets = const EdgeInsets.all(100);
 
   Vector2 get topLeft => Vector2(insets.left, insets.top);
   Vector2 get topRight => Vector2(game.size.x - insets.right, insets.top);
@@ -48,9 +54,33 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
 
   @override
   Paint get paint => Paint()
-    ..color = Colors.white
-    ..strokeWidth = 1
-    ..strokeCap = StrokeCap.round;
+    ..color = Colors.amber
+    ..strokeCap = StrokeCap.round
+    ..strokeWidth = GameUtils.thickness;
+
+  bool isCorner(Vector2 point) {
+    final distToTopLeft = point.distanceTo(topLeft);
+    if (distToTopLeft <= 2) return true;
+    final distToTopRight = point.distanceTo(topRight);
+    if (distToTopRight <= 2) return true;
+    final distToBottomLeft = point.distanceTo(bottomLeft);
+    if (distToBottomLeft <= 2) return true;
+    final distToBottomRight = point.distanceTo(bottomRight);
+    if (distToBottomRight <= 2) return true;
+    return false;
+  }
+
+  Alignment? onCorner(Vector2 point) {
+    final distToTopLeft = point.distanceTo(topLeft);
+    if (distToTopLeft <= 2) return Alignment.topLeft;
+    final distToTopRight = point.distanceTo(topRight);
+    if (distToTopRight <= 2) return Alignment.topRight;
+    final distToBottomLeft = point.distanceTo(bottomLeft);
+    if (distToBottomLeft <= 2) return Alignment.bottomLeft;
+    final distToBottomRight = point.distanceTo(bottomRight);
+    if (distToBottomRight <= 2) return Alignment.bottomRight;
+    return null;
+  }
 
   void createWall() {
     leftWall = LineHitBox.create(from: topLeft, to: bottomLeft);
@@ -96,28 +126,8 @@ class Boundary extends PositionComponent with HasGameReference, HasPaint {
       paint,
     );
   }
+}
 
-  bool isCorner(Vector2 point) {
-    final distToTopLeft = point.distanceTo(topLeft);
-    if (distToTopLeft <= 2) return true;
-    final distToTopRight = point.distanceTo(topRight);
-    if (distToTopRight <= 2) return true;
-    final distToBottomLeft = point.distanceTo(bottomLeft);
-    if (distToBottomLeft <= 2) return true;
-    final distToBottomRight = point.distanceTo(bottomRight);
-    if (distToBottomRight <= 2) return true;
-    return false;
-  }
-
-  Alignment? onCorner(Vector2 point) {
-    final distToTopLeft = point.distanceTo(topLeft);
-    if (distToTopLeft <= 2) return Alignment.topLeft;
-    final distToTopRight = point.distanceTo(topRight);
-    if (distToTopRight <= 2) return Alignment.topRight;
-    final distToBottomLeft = point.distanceTo(bottomLeft);
-    if (distToBottomLeft <= 2) return Alignment.bottomLeft;
-    final distToBottomRight = point.distanceTo(bottomRight);
-    if (distToBottomRight <= 2) return Alignment.bottomRight;
-    return null;
-  }
+extension GetBoundary on HasGameReference<QixGame> {
+  Boundary get boundary => game.firstChild()!;
 }

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:qix/components/player/components/ball.dart';
 import 'package:qix/components/player/components/ball_line.dart';
 import 'package:qix/components/utils/collision_between.dart';
+import 'package:qix/components/utils/game_utils.dart';
 
 class BallLineNBallCollision extends CollisionBetween<BallLine, Ball> {
   BallLineNBallCollision(super.self, super.collided);
@@ -110,8 +111,8 @@ class RunnerLine extends Component {
       linePoints.map((e) => e.toOffset()).toList(),
       Paint()
         ..color = Colors.white
-        ..strokeWidth = 1
-        ..strokeCap = StrokeCap.round,
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = GameUtils.thickness,
     );
   }
 }

@@ -2,14 +2,23 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:qix/components/background/boundary.dart';
 import 'package:qix/components/utils/debug_color.dart';
+import 'package:qix/components/utils/game_utils.dart';
 import 'package:qix/components/utils/line_hit_box.dart';
+import 'package:qix/components/utils/priority.dart';
+import 'package:qix/main.dart';
 
-class FilledArea extends PositionComponent with ParentIsA<Boundary> {
+class FilledArea extends PositionComponent with HasGameReference<QixGame> {
   FilledArea({super.children});
+
+  Boundary get boundary => game.firstChild()!;
+
+  @override
+  int get priority => GamePriority.filledArea;
 
   final List<List<Vector2>> _areas = [];
   final List<List<Offset>> _rawAreas = [];
@@ -57,7 +66,12 @@ class FilledArea extends PositionComponent with ParentIsA<Boundary> {
       rawArea,
       Paint()
         ..color = Colors.white
-        ..strokeWidth = 1,
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = GameUtils.thickness,
     );
   }
+}
+
+extension GetFilledArea on HasGameReference<QixGame> {
+  FilledArea get filledArea => game.firstChild()!;
 }
