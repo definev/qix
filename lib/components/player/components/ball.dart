@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
@@ -38,7 +40,7 @@ class Ball extends PositionComponent
     super.size = Vector2.all(16);
 
     add(RectangleHitbox(
-      size: Vector2.all(2),
+      size: Vector2.all(1),
       position: center,
       isSolid: true,
       anchor: Anchor.center,
@@ -61,42 +63,65 @@ class Ball extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    canvas.drawPath(
-      Path() //
-        ..moveTo(0, size.y / 2)
-        ..lineTo(size.x / 2, 0)
-        ..lineTo(size.x, size.y / 2)
-        ..lineTo(size.x / 2, size.y)
-        ..close(),
+    final startAngle = () {
+      switch (manager.direction) {
+        case AxisDirection.down:
+          return -pi / 6;
+        case AxisDirection.up:
+          return pi * 5 / 6;
+        case AxisDirection.left:
+          return pi / 3;
+        case AxisDirection.right:
+          return pi * 4 / 3;
+        case null:
+          return 0.0;
+      }
+    }();
+    final sweepAngle = () {
+      switch (manager.direction) {
+        case null:
+          return 2 * pi;
+        default:
+          return 4 * pi / 3;
+      }
+    }();
+
+    canvas.drawArc(
+      Rect.fromCenter(center: const Offset(8, 8), width: width, height: height),
+      startAngle,
+      sweepAngle,
+      true,
       Paint()
-        ..shader = LinearGradient(
-          colors: [Colors.orange.shade100, Colors.pink.shade500],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+        ..shader = RadialGradient(
+          colors: [Colors.orange, Colors.pink.shade500],
         ).createShader(Rect.fromLTRB(0, 0, size.x, size.y)),
     );
   }
 
   @override
   void update(double dt) {
-    final dist = 200 * dt;
+    final dist = (manager.boost ? game.size.x / 2 : game.size.x / 10) * dt;
 
     switch (manager.direction) {
       case null:
         break;
       case AxisDirection.up:
-        position += Vector2(0, -dist);
+        y -= dist;
         break;
       case AxisDirection.down:
-        position += Vector2(0, dist);
+        y += dist;
         break;
       case AxisDirection.left:
-        position += Vector2(-dist, 0);
+        x -= dist;
         break;
       case AxisDirection.right:
-        position += Vector2(dist, 0);
+        x += dist;
         break;
     }
+    if (center.x < boundary.topLeft.x) center = Vector2(boundary.topLeft.x, center.y);
+    if (center.y < boundary.topLeft.y) center = Vector2(center.x, boundary.topLeft.y);
+    if (center.x > boundary.bottomRight.x) center = Vector2(boundary.bottomRight.x, center.y);
+    if (center.y > boundary.bottomRight.y) center = Vector2(center.x, boundary.bottomRight.y);
   }
 
   void _handleMovementKey(
@@ -168,7 +193,13 @@ class Ball extends PositionComponent
 
   @override
   bool onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event.isShiftPressed) {
+      manager.boost = true;
+    } else {
+      manager.boost = false;
+    }
     if (event.repeat) return true;
+
     if (keysPressed.length == 1) {
       final key = keysPressed.first;
       if (key == LogicalKeyboardKey.space) {

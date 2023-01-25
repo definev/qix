@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 enum BallPosition { playground, boundary, corner, filledArea }
 
 class BallManager {
+  bool boost = false;
   BallPosition _ballPosition = BallPosition.boundary;
   BallPosition get position => _ballPosition;
   set position(BallPosition position) {

@@ -60,9 +60,9 @@ class _QixGameWidgetState extends State<QixGameWidget> {
                 width: 100,
                 child: Material(
                   child: Slider(
-                    value: GameUtils.thickness / 4,
+                    value: GameUtils.thickness / 10,
                     onChanged: (value) {
-                      GameUtils.thickness = value * 4;
+                      GameUtils.thickness = value * 10;
                       setState(() {});
                     },
                   ),
